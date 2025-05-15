@@ -5,7 +5,7 @@ import { IncomeConstants, Paycheck } from "../schema";
 import { useStickyState } from "../hooks";
 
 type IncomeFormProps = {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Paycheck[]) => void;
 };
 
 const parsePaycheckTableRow = (row: string, constants: IncomeConstants) => {
@@ -19,7 +19,7 @@ const parsePaycheckTableRow = (row: string, constants: IncomeConstants) => {
     parseFloat(columns[4].replace(/[$,]/g, "")),
     parseFloat(columns[5].replace(/[$,]/g, "")),
     -1 * parseFloat(columns[6].replace(/[$,]/g, "")),
-    parseFloat(columns[7].replace(/[$,]/g, "")),
+    -1 * parseFloat(columns[7].replace(/[$,]/g, "")),
     parseFloat(columns[8].replace(/[$,]/g, ""))
   );
 };
@@ -47,9 +47,16 @@ const parsePaycheckTable = (
 
 export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
   const [disabilityInsuranceDeduction, setDisabilityInsuranceDeduction] =
-    useState(0);
-  const [legalPlanDeduction, setLegalPlanDeduction] = useState(0);
-  const [givingDeduction, setGivingDeduction] = useState(0);
+    useStickyState("disabilityInsuranceDeduction", 0);
+  const [legalPlanDeduction, setLegalPlanDeduction] = useStickyState(
+    "legalPlanDeduction",
+    0
+  );
+  const [givingDeduction, setGivingDeduction] = useStickyState(
+    "givingDeduction",
+    0
+  );
+  const [esppRate, setEsppRate] = useStickyState("esppRate", 0);
   const [paycheckTable, setPaycheckTable] = useState("");
   const [salaries, setSalaries] = useStickyState<Record<string, number>>(
     "salaries",
@@ -69,6 +76,7 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
       disabilityInsuranceDeduction,
       legalPlanDeduction,
       givingDeduction,
+      esppRate,
     },
     salaries,
     perksPlus,
@@ -78,7 +86,7 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
 
   return (
     <div className="income-form">
-      <h2>Income Form</h2>
+      <h2>Step 1: Income</h2>
       <div className="constants">
         <label htmlFor="disabilityInsuranceDeduction">
           Disability Insurance Deduction:
@@ -94,7 +102,7 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
         <label htmlFor="legalPlanDeduction">
           Legal Plan Deduction:
           <input
-            type="text"
+            type="number"
             id="legalPlanDeduction"
             value={legalPlanDeduction}
             onChange={(e) => setLegalPlanDeduction(Number(e.target.value))}
@@ -103,10 +111,19 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
         <label htmlFor="givingDeduction">
           Giving Deduction:
           <input
-            type="text"
+            type="number"
             id="givingDeduction"
             value={givingDeduction}
             onChange={(e) => setGivingDeduction(Number(e.target.value))}
+          />
+        </label>
+        <label htmlFor="esppRate">
+          ESPP Rate:
+          <input
+            type="number"
+            id="esppRate"
+            value={esppRate}
+            onChange={(e) => setEsppRate(Number(e.target.value))}
           />
         </label>
       </div>
@@ -139,6 +156,15 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
                 <th>Paycheck Taxes Withheld</th>
                 <th>Est. Salary Taxes Withheld</th>
                 <th>Est. Bonus Taxes Withheld</th>
+                <th>After-tax Deductions</th>
+                <th>Non-stock After Tax Deductions</th>
+                <th>Non-investment After Tax Deductions</th>
+                <th>Investment After Tax Deductions</th>
+                <th>ESPP</th>
+                <th>Roth IRA</th>
+                <th>Bonus Net Pay</th>
+                <th>Non-bonus Net Pay</th>
+                <th>Net Stock Vestings</th>
               </tr>
             </thead>
             <tbody>
@@ -238,10 +264,74 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
                       maximumFractionDigits: 2,
                     }) ?? ""}
                   </td>
+                  <td>
+                    {row.afterTaxDeductions.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.nonStockAfterTaxDeductions.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.nonInvestmentAfterTaxDeductions.toLocaleString(
+                      "en-US",
+                      {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }
+                    )}
+                  </td>
+                  <td>
+                    {row.investmentAfterTaxDeductions.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.espp.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.rothIra.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.bonusNetPay.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.nonBonusNetPay.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>
+                    {row.netStockVestings.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <button
+            onClick={() => {
+              onSubmit(rows);
+            }}
+          >
+            Submit
+          </button>
         </div>
       )}
     </div>

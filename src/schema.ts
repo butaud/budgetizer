@@ -2,6 +2,7 @@ export type IncomeConstants = {
   disabilityInsuranceDeduction: number;
   legalPlanDeduction: number;
   givingDeduction: number;
+  esppRate: number;
 };
 
 export class Paycheck {
@@ -72,5 +73,45 @@ export class Paycheck {
     if (!this.paycheckTaxesWithheld || !this.estSalaryTaxesWithheld)
       return undefined;
     return this.paycheckTaxesWithheld - this.estSalaryTaxesWithheld;
+  }
+
+  get nonStockAfterTaxDeductions(): number {
+    return (
+      this.afterTaxDeductions - this.stockVesting + (this.stockAwardTaxes ?? 0)
+    );
+  }
+
+  get nonInvestmentAfterTaxDeductions(): number {
+    return (
+      this.constants.disabilityInsuranceDeduction +
+      this.constants.legalPlanDeduction +
+      this.constants.givingDeduction
+    );
+  }
+
+  get investmentAfterTaxDeductions(): number {
+    return (
+      this.nonStockAfterTaxDeductions - this.nonInvestmentAfterTaxDeductions
+    );
+  }
+
+  get espp(): number {
+    return (this.grossPay - (this.perksPlus ?? 0)) * this.constants.esppRate;
+  }
+
+  get rothIra(): number {
+    return this.investmentAfterTaxDeductions - this.espp;
+  }
+
+  get bonusNetPay(): number {
+    return (this.bonus ?? 0) - (this.estBonusTaxesWithheld ?? 0);
+  }
+
+  get nonBonusNetPay(): number {
+    return this.netPay - this.bonusNetPay;
+  }
+
+  get netStockVestings(): number {
+    return this.stockVesting - (this.stockAwardTaxes ?? 0);
   }
 }

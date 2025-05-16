@@ -1,25 +1,31 @@
 import "./App.css";
 import { useStickyState } from "./hooks";
 import { IncomeForm } from "./income/IncomeForm";
-import { Paycheck, PaycheckCollection } from "./schema";
+import { SankeyD3 } from "./SankeyD3";
+import { SankeyLink } from "./SankeyLink";
+import { PaycheckCollection } from "./schema";
 
 function App() {
-  const [savedPaycheckData, setSavedPaycheckData] = useStickyState<Paycheck[]>(
+  const [savedPaycheckData, setSavedPaycheckData] = useStickyState<string>(
     "paycheckData",
-    []
+    "[]"
   );
 
-  const paycheckCollection = new PaycheckCollection(savedPaycheckData);
+  const paycheckCollection = PaycheckCollection.fromString(savedPaycheckData);
 
   return (
     <div className="App">
-      <button onClick={() => setSavedPaycheckData([])}>
+      <button onClick={() => setSavedPaycheckData("[]")}>
         Clear Paycheck Data
       </button>
-      {savedPaycheckData.length === 0 && (
-        <IncomeForm onSubmit={(data) => setSavedPaycheckData(data)} />
+      {paycheckCollection.length === 0 && (
+        <IncomeForm
+          onSubmit={(data) =>
+            setSavedPaycheckData(new PaycheckCollection(data).stringify())
+          }
+        />
       )}
-      {savedPaycheckData.length > 0 && (
+      {paycheckCollection.length > 0 && (
         <>
           <div>
             <h2>Paycheck Summary</h2>
@@ -57,8 +63,11 @@ function App() {
             </h3>
           </div>
           <div>
-            <h2>Sankeymatic code</h2>
-            <pre>{paycheckCollection.sankeyData}</pre>
+            <h2>Diagram</h2>
+            <SankeyD3 data={paycheckCollection.sankeyData} />
+            <SankeyLink code={paycheckCollection.sankeymaticData}>
+              View in SankeyMatic
+            </SankeyLink>
           </div>
         </>
       )}

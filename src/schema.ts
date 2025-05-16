@@ -1,3 +1,5 @@
+import { SankeyD3Props } from "./SankeyD3";
+
 export type IncomeConstants = {
   disabilityInsuranceDeduction: number;
   legalPlanDeduction: number;
@@ -43,6 +45,44 @@ export class Paycheck {
     this.taxesWithheld = taxesWithheld;
     this.afterTaxDeductions = afterTaxDeductions;
     this.netPay = netPay;
+  }
+
+  stringify(): string {
+    return JSON.stringify({
+      date: this.date,
+      payPeriodStart: this.payPeriodStart,
+      payPeriodEnd: this.payPeriodEnd,
+      grossPay: this.grossPay,
+      adjustments: this.adjustments,
+      taxableEarnings: this.taxableEarnings,
+      taxesWithheld: this.taxesWithheld,
+      afterTaxDeductions: this.afterTaxDeductions,
+      netPay: this.netPay,
+      salary: this.salary,
+      perksPlus: this.perksPlus,
+      stockAwardTaxes: this.stockAwardTaxes,
+      constants: this.constants,
+    });
+  }
+
+  static fromString(data: string): Paycheck {
+    const parsedData = JSON.parse(data);
+    const paycheck = new Paycheck(
+      parsedData.constants,
+      parsedData.date,
+      parsedData.payPeriodStart,
+      parsedData.payPeriodEnd,
+      parsedData.grossPay,
+      parsedData.adjustments,
+      parsedData.taxableEarnings,
+      parsedData.taxesWithheld,
+      parsedData.afterTaxDeductions,
+      parsedData.netPay
+    );
+    paycheck.salary = parsedData.salary;
+    paycheck.perksPlus = parsedData.perksPlus;
+    paycheck.stockAwardTaxes = parsedData.stockAwardTaxes;
+    return paycheck;
   }
 
   get bonus(): number | undefined {
@@ -121,6 +161,24 @@ export class PaycheckCollection {
 
   constructor(paychecks: Paycheck[]) {
     this.paychecks = paychecks;
+  }
+
+  stringify(): string {
+    return JSON.stringify(
+      this.paychecks.map((paycheck) => paycheck.stringify())
+    );
+  }
+
+  static fromString(data: string): PaycheckCollection {
+    const parsedData = JSON.parse(data);
+    const paychecks = parsedData.map((paycheckData: string) =>
+      Paycheck.fromString(paycheckData)
+    );
+    return new PaycheckCollection(paychecks);
+  }
+
+  get length(): number {
+    return this.paychecks.length;
   }
 
   get grossPay(): number {
@@ -261,7 +319,128 @@ export class PaycheckCollection {
     }, 0);
   }
 
-  get sankeyData(): string {
+  get sankeyData(): SankeyD3Props["data"] {
+    const nodes: SankeyD3Props["data"]["nodes"] = [
+      { id: "Salary", name: "Salary" },
+      { id: "Stock", name: "Stock" },
+      { id: "Bonus", name: "Bonus" },
+      { id: "Pre-tax", name: "Pre-tax" },
+      { id: "Taxes", name: "Taxes" },
+      { id: "Net Income", name: "Net Income" },
+      { id: "Paycheck", name: "Paycheck" },
+      { id: "Deducted Services", name: "Deducted Services" },
+      { id: "Deducted Investments", name: "Deducted Investments" },
+      { id: "Deducted Giving", name: "Deducted Giving" },
+      { id: "Irregular Income", name: "Irregular Income" },
+      { id: "Paycheck Taxes", name: "Paycheck Taxes" },
+      { id: "Stock Taxes", name: "Stock Taxes" },
+      { id: "Roth IRA", name: "Roth IRA" },
+      { id: "ESPP", name: "ESPP" },
+      { id: "Stock Vestings", name: "Stock Vestings" },
+      { id: "Bonus Take-Home", name: "Bonus Take-Home" },
+      { id: "Salary Take-Home", name: "Salary Take-Home" },
+    ];
+    const links: SankeyD3Props["data"]["links"] = [
+      {
+        source: "Salary",
+        target: "Pre-tax",
+        value: this.salary ?? 0,
+      },
+      {
+        source: "Stock",
+        target: "Pre-tax",
+        value: this.stockVesting,
+      },
+      {
+        source: "Bonus",
+        target: "Pre-tax",
+        value: this.bonus,
+      },
+      {
+        source: "Pre-tax",
+        target: "Taxes",
+        value: this.taxesWithheld,
+      },
+      {
+        source: "Pre-tax",
+        target: "Net Income",
+        value: this.grossPayIncludingStock - this.taxesWithheld,
+      },
+      {
+        source: "Taxes",
+        target: "Paycheck Taxes",
+        value: this.paycheckTaxesWithheld,
+      },
+      {
+        source: "Taxes",
+        target: "Stock Taxes",
+        value: this.stockAwardTaxes,
+      },
+      {
+        source: "Net Income",
+        target: "Deducted Services",
+        value: this.disabilityInsuranceDeduction + this.legalPlanDeduction,
+      },
+      {
+        source: "Net Income",
+        target: "Deducted Giving",
+        value: this.givingDeduction,
+      },
+      {
+        source: "Net Income",
+        target: "Deducted Investments",
+        value: this.rothIra + this.espp,
+      },
+      {
+        source: "Net Income",
+        target: "Stock Vestings",
+        value: this.netStockVestings,
+      },
+      {
+        source: "Net Income",
+        target: "Paycheck",
+        value: this.nonBonusNetPay + this.bonusNetPay,
+      },
+      {
+        source: "Deducted Investments",
+        target: "Roth IRA",
+        value: this.rothIra,
+      },
+      {
+        source: "Deducted Investments",
+        target: "ESPP",
+        value: this.espp,
+      },
+      {
+        source: "ESPP",
+        target: "Irregular Income",
+        value: this.espp,
+      },
+      {
+        source: "Stock Vestings",
+        target: "Irregular Income",
+        value: this.netStockVestings,
+      },
+      {
+        source: "Paycheck",
+        target: "Bonus Take-Home",
+        value: this.bonusNetPay,
+      },
+      {
+        source: "Bonus Take-Home",
+        target: "Irregular Income",
+        value: this.bonusNetPay,
+      },
+      {
+        source: "Paycheck",
+        target: "Salary Take-Home",
+        value: this.nonBonusNetPay,
+      },
+    ];
+    return { nodes, links };
+  }
+
+  get sankeymaticData(): string {
     const lines = [];
     lines.push(`Salary [${this.salary?.toFixed(2)}] Pre-tax`);
     lines.push(`Stock [${this.stockVesting.toFixed(2)}] Pre-tax`);
@@ -303,6 +482,7 @@ export class PaycheckCollection {
     lines.push(`Bonus Take-Home [*] Irregular Income`);
 
     lines.push(`Paycheck [*] Salary Take-Home`);
+    lines.push("size w 1200\n  h 600");
 
     return lines.join("\n");
   }

@@ -14,6 +14,17 @@ export type SankeyD3Props = {
   height: number;
 };
 
+const dollarFormat = (value: number | undefined) => {
+  if (value === undefined) {
+    return "$0.00";
+  }
+  if (value > 1000) {
+    return `$${(value / 1000).toFixed(1)}k`;
+  } else {
+    return `$${value.toFixed(2)}`;
+  }
+};
+
 export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
   const responsiveWidth = Math.min(
     window.innerWidth,
@@ -94,11 +105,7 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
         fontSize={14}
         fontWeight="bold"
       >
-        {node.id}: $
-        {node.value?.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        {node.id}: {dollarFormat(node.value)}
       </text>
     );
   });

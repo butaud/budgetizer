@@ -1,0 +1,11 @@
+.allocation-tab {
+  .totals {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+
+    .total.error {
+      color: red;
+    }
+  }
+}

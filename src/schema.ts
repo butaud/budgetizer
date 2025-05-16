@@ -437,11 +437,13 @@ export class SankeyData {
     this.flows = flows;
   }
 
-  append(other: SankeyData | SankeyFlow[]) {
+  append(other: SankeyData | SankeyFlow[] | SankeyFlow): void {
     if (other instanceof SankeyData) {
       this.flows = this.flows.concat(other.flows);
-    } else {
+    } else if (Array.isArray(other)) {
       this.flows = this.flows.concat(other);
+    } else {
+      this.flows.push(other);
     }
   }
 
@@ -483,8 +485,16 @@ export class ExpenseCollection {
     return this.expenses.length;
   }
 
+  get expenseList(): Expense[] {
+    return this.expenses;
+  }
+
   get total(): number {
     return this.expenses.reduce((acc, expense) => acc + expense.amount, 0);
+  }
+
+  get names(): string[] {
+    return this.expenses.map((expense) => expense.name);
   }
 
   get sankeyData(): SankeyData {
@@ -492,6 +502,58 @@ export class ExpenseCollection {
       source: "Expenses",
       target: expense.name,
       value: expense.amount,
+    }));
+    return new SankeyData(flows);
+  }
+}
+
+export type Allocation = {
+  from: "Irregular Income" | "Salary Take-Home";
+  to: string;
+  value: number;
+};
+
+export class AllocationCollection {
+  private allocations: Allocation[];
+
+  constructor(allocations: Allocation[]) {
+    this.allocations = allocations;
+  }
+
+  get length(): number {
+    return this.allocations.length;
+  }
+
+  get total(): number {
+    return this.allocations.reduce(
+      (acc, allocation) => acc + allocation.value,
+      0
+    );
+  }
+
+  get irregularTotal(): number {
+    return this.allocations
+      .filter((allocation) => allocation.from === "Irregular Income")
+      .reduce((acc, allocation) => acc + allocation.value, 0);
+  }
+
+  get salaryTotal(): number {
+    return this.allocations
+      .filter((allocation) => allocation.from === "Salary Take-Home")
+      .reduce((acc, allocation) => acc + allocation.value, 0);
+  }
+
+  getAllocatedAmount(name: string): number {
+    return this.allocations
+      .filter((allocation) => allocation.to === name)
+      .reduce((acc, allocation) => acc + allocation.value, 0);
+  }
+
+  get sankeyData(): SankeyData {
+    const flows: SankeyFlow[] = this.allocations.map((allocation) => ({
+      source: allocation.from,
+      target: allocation.to,
+      value: allocation.value,
     }));
     return new SankeyData(flows);
   }

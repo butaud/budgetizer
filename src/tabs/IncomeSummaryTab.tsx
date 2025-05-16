@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { PaycheckCollection } from "./schema";
+import { PaycheckCollection } from "../schema";
 
 import "./IncomeSummaryTab.css";
 

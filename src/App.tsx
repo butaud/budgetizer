@@ -1,12 +1,12 @@
 import "./App.css";
 import { useStickyState } from "./hooks";
 import { IncomeForm } from "./income/IncomeForm";
-import { IncomeSummaryTab } from "./IncomeSummaryTab";
+import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
 import { SankeyD3 } from "./SankeyD3";
 import { SankeyLink } from "./SankeyLink";
 import { PaycheckCollection } from "./schema";
-import { SpendingTab } from "./SpendingTab";
-import { Tabster } from "./Tabster";
+import { SpendingTab } from "./tabs/SpendingTab";
+import { Tabster } from "./tabs/Tabster";
 
 function App() {
   const [savedPaycheckData, setSavedPaycheckData] = useStickyState<string>(

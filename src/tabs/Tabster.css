@@ -12,10 +12,6 @@
       background-color: #f4f4f4;
       margin: 0 0 -2px;
 
-      &:first-child {
-        border-left: none;
-      }
-
       &.active:disabled {
         border-color: #000;
         border-bottom: 2px solid white;

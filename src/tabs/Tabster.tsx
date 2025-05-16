@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import "./Tabster.css";
 
 export type TabsterTab = {
@@ -8,11 +6,15 @@ export type TabsterTab = {
 };
 export type TabsterProps = {
   tabs: TabsterTab[];
+  activeTab: number;
+  setActiveTab?: (index: number) => void;
 };
 
-export const Tabster: React.FC<TabsterProps> = ({ tabs }) => {
-  const [activeTab, setActiveTab] = useState(0);
-
+export const Tabster: React.FC<TabsterProps> = ({
+  tabs,
+  activeTab,
+  setActiveTab,
+}) => {
   return (
     <div className="tabster">
       <div className="tabster-tabs">
@@ -20,7 +22,7 @@ export const Tabster: React.FC<TabsterProps> = ({ tabs }) => {
           <button
             key={index}
             className={`tabster-tab ${activeTab === index ? "active" : ""}`}
-            onClick={() => setActiveTab(index)}
+            onClick={() => setActiveTab?.(index)}
             disabled={activeTab === index}
           >
             {tab.label}

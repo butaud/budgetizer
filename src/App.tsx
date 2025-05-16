@@ -3,7 +3,7 @@ import { useStickyState } from "./hooks";
 import { IncomeForm } from "./income/IncomeForm";
 import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
 import { Expense, ExpenseCollection, PaycheckCollection } from "./schema";
-import { SpendingTab } from "./tabs/SpendingTab";
+import { AllocationTab } from "./tabs/AllocationTab";
 import { Tabster } from "./tabs/Tabster";
 import { ExpensesTab } from "./tabs/ExpensesTab";
 import { Diagram } from "./diagram/Diagram";
@@ -14,6 +14,7 @@ function App() {
     "[]"
   );
   const [expenses, setExpenses] = useStickyState<Expense[]>("expenses", []);
+  const [activeTab, setActiveTab] = useStickyState<number>("activeTab", 0);
 
   const paycheckCollection = PaycheckCollection.fromString(savedPaycheckData);
   const expenseCollection = new ExpenseCollection(expenses);
@@ -31,6 +32,8 @@ function App() {
         <>
           <div>
             <Tabster
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
               tabs={[
                 {
                   label: "Income",
@@ -42,10 +45,6 @@ function App() {
                   ),
                 },
                 {
-                  label: "Spending",
-                  content: <SpendingTab />,
-                },
-                {
                   label: "Expenses",
                   content: (
                     <ExpensesTab
@@ -54,12 +53,23 @@ function App() {
                     />
                   ),
                 },
+                {
+                  label: "Allocation",
+                  content: <AllocationTab />,
+                },
               ]}
             />
           </div>
           <Diagram
             paycheckCollection={paycheckCollection}
             expenseCollection={expenseCollection}
+            mode={
+              activeTab === 0
+                ? "income"
+                : activeTab === 1
+                ? "expenses"
+                : "allocation"
+            }
           />
         </>
       )}

@@ -319,7 +319,7 @@ export class PaycheckCollection {
     }, 0);
   }
 
-  get sankeyData(): SankeyD3Props["data"] {
+  get sankeyD3Data(): SankeyD3Props["data"] {
     const nodes: SankeyD3Props["data"]["nodes"] = [
       { id: "Salary", name: "Salary" },
       { id: "Stock", name: "Stock" },

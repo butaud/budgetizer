@@ -64,7 +64,7 @@ function App() {
           </div>
           <div>
             <h2>Diagram</h2>
-            <SankeyD3 data={paycheckCollection.sankeyData} />
+            <SankeyD3 data={paycheckCollection.sankeyD3Data} />
             <SankeyLink code={paycheckCollection.sankeymaticData}>
               View in SankeyMatic
             </SankeyLink>

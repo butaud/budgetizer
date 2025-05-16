@@ -2,6 +2,8 @@ import { schemeCategory10, scaleOrdinal } from "d3";
 import { sankey, sankeyCenter, sankeyLinkHorizontal } from "d3-sankey";
 import { FC } from "react";
 
+import "./SankeyD3.css";
+
 export type SankeyD3Props = {
   data: {
     nodes: { id: string; name: string }[];
@@ -10,14 +12,15 @@ export type SankeyD3Props = {
 };
 
 export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
-  const width = 600;
+  const width = 800;
+  const height = 500;
   const colorScale = scaleOrdinal(schemeCategory10);
   const sankeyGenerator = sankey<{ id: string; name: string }, {}>()
     .nodeWidth(26)
     .nodePadding(29)
     .extent([
       [1, 1],
-      [600 - 1, 400 - 5],
+      [width - 1, height - 5],
     ])
     .nodeId((d) => d.id)
     .nodeAlign(sankeyCenter);
@@ -34,6 +37,7 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
         fill={colorScale(node.name) ?? "#000"}
         fillOpacity={0.8}
         rx={0.9}
+        className="node"
       />
     </g>
   ));
@@ -55,8 +59,9 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
         d={path ?? undefined}
         stroke={color}
         fill="none"
-        strokeOpacity={0.1}
+        strokeOpacity={0.3}
         strokeWidth={link.width}
+        className="link"
       />
     );
   });
@@ -69,16 +74,21 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
         y={((node.y1 ?? 0) + (node.y0 ?? 0)) / 2}
         dy="0.35rem"
         textAnchor={(node.x0 ?? 0) < width / 2 ? "start" : "end"}
-        fontSize={12}
+        fontSize={14}
+        fontWeight="bold"
       >
-        {node.name}
+        {node.name}: $
+        {node.value?.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
       </text>
     );
   });
 
   return (
     <div>
-      <svg width="600" height="400">
+      <svg width={width} height={height}>
         {allNodes}
         {allLinks}
         {allLabels}

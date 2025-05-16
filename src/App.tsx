@@ -2,19 +2,21 @@ import "./App.css";
 import { useStickyState } from "./hooks";
 import { IncomeForm } from "./income/IncomeForm";
 import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
-import { SankeyD3 } from "./SankeyD3";
-import { SankeyLink } from "./SankeyLink";
-import { PaycheckCollection } from "./schema";
+import { Expense, ExpenseCollection, PaycheckCollection } from "./schema";
 import { SpendingTab } from "./tabs/SpendingTab";
 import { Tabster } from "./tabs/Tabster";
+import { ExpensesTab } from "./tabs/ExpensesTab";
+import { Diagram } from "./diagram/Diagram";
 
 function App() {
   const [savedPaycheckData, setSavedPaycheckData] = useStickyState<string>(
     "paycheckData",
     "[]"
   );
+  const [expenses, setExpenses] = useStickyState<Expense[]>("expenses", []);
 
   const paycheckCollection = PaycheckCollection.fromString(savedPaycheckData);
+  const expenseCollection = new ExpenseCollection(expenses);
 
   return (
     <div className="App">
@@ -43,16 +45,22 @@ function App() {
                   label: "Spending",
                   content: <SpendingTab />,
                 },
+                {
+                  label: "Expenses",
+                  content: (
+                    <ExpensesTab
+                      expenses={expenses}
+                      setExpenses={setExpenses}
+                    />
+                  ),
+                },
               ]}
             />
           </div>
-          <div>
-            <h2>Diagram</h2>
-            <SankeyD3 data={paycheckCollection.sankeyD3Data} />
-            <SankeyLink code={paycheckCollection.sankeymaticData}>
-              View in SankeyMatic
-            </SankeyLink>
-          </div>
+          <Diagram
+            paycheckCollection={paycheckCollection}
+            expenseCollection={expenseCollection}
+          />
         </>
       )}
     </div>

@@ -3,30 +3,31 @@ import { sankey, sankeyCenter, sankeyLinkHorizontal } from "d3-sankey";
 import { FC } from "react";
 
 import "./SankeyD3.css";
-import { SankeyFlow } from "./schema";
+import { SankeyFlow } from "../schema";
 
 export type SankeyD3Props = {
   data: {
     nodes: { id: string }[];
     links: SankeyFlow[];
   };
+  width: number;
+  height: number;
 };
 
-export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
-  const width = Math.min(
+export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
+  const responsiveWidth = Math.min(
     window.innerWidth,
     document.documentElement.clientWidth,
     document.body.clientWidth,
-    1000
+    width
   );
-  const height = 500;
   const colorScale = scaleOrdinal(schemeCategory10);
   const sankeyGenerator = sankey<{ id: string }, {}>()
     .nodeWidth(26)
     .nodePadding(29)
     .extent([
       [1, 1],
-      [width - 1, height - 5],
+      [responsiveWidth - 1, height - 5],
     ])
     .nodeId((d) => d.id)
     .nodeAlign(sankeyCenter);
@@ -76,13 +77,17 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
     return (
       <text
         key={i}
-        x={(node.x0 ?? 0) < width / 2 ? (node.x1 ?? 0) + 6 : (node.x0 ?? 0) - 6}
+        x={
+          (node.x0 ?? 0) < responsiveWidth / 2
+            ? (node.x1 ?? 0) + 6
+            : (node.x0 ?? 0) - 6
+        }
         y={((node.y1 ?? 0) + (node.y0 ?? 0)) / 2}
         dy="0.35rem"
         textAnchor={
-          (node.x0 ?? 0) < width / 4
+          (node.x0 ?? 0) < responsiveWidth / 4
             ? "start"
-            : (node.x0 ?? 0) > width * 0.75
+            : (node.x0 ?? 0) > responsiveWidth * 0.75
             ? "end"
             : "middle"
         }
@@ -100,7 +105,7 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data }) => {
 
   return (
     <div>
-      <svg width={width} height={height}>
+      <svg width={responsiveWidth} height={height}>
         {allNodes}
         {allLinks}
         {allLabels}

@@ -1,4 +1,4 @@
-import { SankeyD3Props } from "./SankeyD3";
+import { SankeyD3Props } from "./diagram/SankeyD3";
 
 export type IncomeConstants = {
   disabilityInsuranceDeduction: number;
@@ -319,8 +319,12 @@ export class PaycheckCollection {
     }, 0);
   }
 
-  get sankeyData(): SankeyFlow[] {
-    return [
+  get irregularIncome(): number {
+    return this.espp + this.netStockVestings + this.bonusNetPay;
+  }
+
+  get sankeyData(): SankeyData {
+    return new SankeyData([
       {
         source: "Salary",
         target: "Pre-tax",
@@ -416,11 +420,33 @@ export class PaycheckCollection {
         target: "Salary Take-Home",
         value: this.nonBonusNetPay,
       },
-    ];
+    ]);
+  }
+}
+
+export type SankeyFlow = {
+  source: string;
+  target: string;
+  value: number;
+};
+
+export class SankeyData {
+  flows: SankeyFlow[];
+
+  constructor(flows: SankeyFlow[]) {
+    this.flows = flows;
+  }
+
+  append(other: SankeyData | SankeyFlow[]) {
+    if (other instanceof SankeyData) {
+      this.flows = this.flows.concat(other.flows);
+    } else {
+      this.flows = this.flows.concat(other);
+    }
   }
 
   get sankeyD3Data(): SankeyD3Props["data"] {
-    const links = this.sankeyData;
+    const links = this.flows;
     const nodes: SankeyD3Props["data"]["nodes"] = [];
     links.forEach((link) => {
       if (!nodes.some((node) => node.id === link.source)) {
@@ -432,19 +458,41 @@ export class PaycheckCollection {
     });
     return { nodes, links };
   }
-
   get sankeymaticData(): string {
-    const lines = this.sankeyData.map(
+    const lines = this.flows.map(
       (link) => `${link.source} [${link.value.toFixed(2)}] ${link.target}`
     );
-    lines.push("size w 1200\n  h 600");
 
     return lines.join("\n");
   }
 }
 
-export type SankeyFlow = {
-  source: string;
-  target: string;
-  value: number;
+export type Expense = {
+  name: string;
+  amount: number;
 };
+
+export class ExpenseCollection {
+  private expenses: Expense[];
+
+  constructor(expenses: Expense[]) {
+    this.expenses = expenses;
+  }
+
+  get length(): number {
+    return this.expenses.length;
+  }
+
+  get total(): number {
+    return this.expenses.reduce((acc, expense) => acc + expense.amount, 0);
+  }
+
+  get sankeyData(): SankeyData {
+    const flows: SankeyFlow[] = this.expenses.map((expense) => ({
+      source: "Expenses",
+      target: expense.name,
+      value: expense.amount,
+    }));
+    return new SankeyData(flows);
+  }
+}

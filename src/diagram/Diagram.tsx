@@ -8,6 +8,7 @@ import { SankeyD3 } from "./SankeyD3";
 import { SankeyLink } from "./SankeyLink";
 
 import "./Diagram.css";
+import { useState } from "react";
 
 export type DiagramProps = {
   paycheckCollection: PaycheckCollection;
@@ -22,15 +23,19 @@ export const Diagram = ({
   allocationCollection,
   mode,
 }: DiagramProps) => {
+  const [focused, setFocused] = useState(false);
   const sankeyData = new SankeyData([]);
   const errors: string[] = [];
-  if (mode === "income" || mode === "allocation") {
+  if (mode === "income") {
     sankeyData.append(paycheckCollection.sankeyData);
   }
   if (mode === "expenses") {
     sankeyData.append(expenseCollection.sankeyData);
   }
   if (mode === "allocation") {
+    if (!focused) {
+      sankeyData.append(paycheckCollection.sankeyData);
+    }
     if (allocationCollection.salaryTotal > paycheckCollection.nonBonusNetPay) {
       errors.push("Salary allocation exceeds salary take-home pay.");
     }
@@ -80,6 +85,16 @@ export const Diagram = ({
   const height = mode === "allocation" ? 600 : 500;
   return (
     <div className="diagram">
+      {mode === "allocation" && (
+        <label>
+          <input
+            type="checkbox"
+            checked={focused}
+            onChange={() => setFocused(!focused)}
+          />
+          Focused
+        </label>
+      )}
       {errors.map((error, index) => (
         <p key={index} className="error">
           Error: {error}

@@ -136,19 +136,23 @@ export const AllocationTab: FC<AllocationTabProps> = ({
               </td>
             </tr>
           ))}
+          <tr>
+            <td>
+              <button
+                onClick={() =>
+                  addAllocation({
+                    from: "Salary Take-Home",
+                    to: "Unallocated Spending",
+                    value: 0,
+                  })
+                }
+              >
+                + Add Allocation
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
-      <button
-        onClick={() =>
-          addAllocation({
-            from: "Salary Take-Home",
-            to: "Unallocated Spending",
-            value: 0,
-          })
-        }
-      >
-        Add Allocation
-      </button>
     </div>
   );
 };

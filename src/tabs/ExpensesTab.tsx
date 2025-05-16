@@ -14,7 +14,6 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
   };
   return (
     <div className="expenses-tab">
-      <h2>Expenses</h2>
       <table>
         <thead>
           <tr>
@@ -64,15 +63,19 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
               </td>
             </tr>
           ))}
+          <tr>
+            <td>
+              <button
+                onClick={() =>
+                  setExpenses([...expenses, { name: "New Expense", amount: 0 }])
+                }
+              >
+                + Add Expense
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
-      <button
-        onClick={() =>
-          setExpenses([...expenses, { name: "New Expense", amount: 0 }])
-        }
-      >
-        Add Expense
-      </button>
     </div>
   );
 };

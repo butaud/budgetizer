@@ -319,28 +319,8 @@ export class PaycheckCollection {
     }, 0);
   }
 
-  get sankeyD3Data(): SankeyD3Props["data"] {
-    const nodes: SankeyD3Props["data"]["nodes"] = [
-      { id: "Salary", name: "Salary" },
-      { id: "Stock", name: "Stock" },
-      { id: "Bonus", name: "Bonus" },
-      { id: "Pre-tax", name: "Pre-tax" },
-      { id: "Taxes", name: "Taxes" },
-      { id: "Net Income", name: "Net Income" },
-      { id: "Paycheck", name: "Paycheck" },
-      { id: "Deducted Services", name: "Deducted Services" },
-      { id: "Deducted Investments", name: "Deducted Investments" },
-      { id: "Deducted Giving", name: "Deducted Giving" },
-      { id: "Irregular Income", name: "Irregular Income" },
-      { id: "Paycheck Taxes", name: "Paycheck Taxes" },
-      { id: "Stock Taxes", name: "Stock Taxes" },
-      { id: "Roth IRA", name: "Roth IRA" },
-      { id: "ESPP", name: "ESPP" },
-      { id: "Stock Vestings", name: "Stock Vestings" },
-      { id: "Bonus Take-Home", name: "Bonus Take-Home" },
-      { id: "Salary Take-Home", name: "Salary Take-Home" },
-    ];
-    const links: SankeyD3Props["data"]["links"] = [
+  get sankeyData(): SankeyFlow[] {
+    return [
       {
         source: "Salary",
         target: "Pre-tax",
@@ -437,53 +417,34 @@ export class PaycheckCollection {
         value: this.nonBonusNetPay,
       },
     ];
+  }
+
+  get sankeyD3Data(): SankeyD3Props["data"] {
+    const links = this.sankeyData;
+    const nodes: SankeyD3Props["data"]["nodes"] = [];
+    links.forEach((link) => {
+      if (!nodes.some((node) => node.id === link.source)) {
+        nodes.push({ id: link.source });
+      }
+      if (!nodes.some((node) => node.id === link.target)) {
+        nodes.push({ id: link.target });
+      }
+    });
     return { nodes, links };
   }
 
   get sankeymaticData(): string {
-    const lines = [];
-    lines.push(`Salary [${this.salary?.toFixed(2)}] Pre-tax`);
-    lines.push(`Stock [${this.stockVesting.toFixed(2)}] Pre-tax`);
-    lines.push(`Bonus [${this.bonus.toFixed(2)}] Pre-tax`);
-
-    lines.push(`Pre-tax [${this.taxesWithheld.toFixed(2)}] Taxes`);
-    lines.push(`Pre-tax [*] Net Income`);
-
-    lines.push(
-      `Taxes [${this.paycheckTaxesWithheld.toFixed(2)}] Paycheck Taxes`
+    const lines = this.sankeyData.map(
+      (link) => `${link.source} [${link.value.toFixed(2)}] ${link.target}`
     );
-    lines.push(`Taxes [${this.stockAwardTaxes.toFixed(2)}] Stock Taxes`);
-
-    lines.push(
-      `Net Income [${(
-        this.disabilityInsuranceDeduction + this.legalPlanDeduction
-      ).toFixed(2)}] Deducted Services`
-    );
-    lines.push(
-      `Net Income [${this.givingDeduction.toFixed(2)}] Deducted Giving`
-    );
-    lines.push(
-      `Net Income [${(this.rothIra + this.espp).toFixed(
-        2
-      )}] Deducted Investments`
-    );
-    lines.push(
-      `Net Income [${this.netStockVestings.toFixed(2)}] Stock Vestings`
-    );
-    lines.push(`Net Income [*] Paycheck`);
-
-    lines.push(`Deducted Investments [${this.rothIra.toFixed(2)}] Roth IRA`);
-    lines.push(`Deducted Investments [${this.espp.toFixed(2)}] ESPP`);
-
-    lines.push(`ESPP [*] Irregular Income`);
-    lines.push(`Stock Vestings [*] Irregular Income`);
-
-    lines.push(`Paycheck [${this.bonusNetPay.toFixed(2)}] Bonus Take-Home`);
-    lines.push(`Bonus Take-Home [*] Irregular Income`);
-
-    lines.push(`Paycheck [*] Salary Take-Home`);
     lines.push("size w 1200\n  h 600");
 
     return lines.join("\n");
   }
 }
+
+export type SankeyFlow = {
+  source: string;
+  target: string;
+  value: number;
+};

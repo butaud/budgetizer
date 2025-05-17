@@ -7,7 +7,6 @@ import {
 } from "../schema";
 
 import "./AllocationTab.css";
-import exp from "constants";
 import ReactSlider from "react-slider";
 
 export type AllocationTabProps = {
@@ -30,16 +29,20 @@ const Total: FC<{
       (className ? " " + className : "")
     }
   >
-    <strong className="label">{label}</strong>: $
-    {allocated.toLocaleString("en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}{" "}
-    / $
-    {total.toLocaleString("en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}
+    <div className="label">{label}</div>
+    <div className="value">
+      {" "}
+      $
+      {allocated.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}{" "}
+      / $
+      {total.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })}
+    </div>
   </div>
 );
 
@@ -62,36 +65,16 @@ export const AllocationTab: FC<AllocationTabProps> = ({
     const irregularValue = expense.amount - (irregularAllocation?.value ?? 0);
     return { expense, values: [salaryValue, irregularValue] };
   });
-  const changeAllocation = (index: number, allocation: Allocation) => {
-    const updatedAllocations = [...allocations];
-    updatedAllocations[index] = allocation;
-    setAllocations(updatedAllocations);
-  };
-  const addAllocation = (newAllocation: Allocation) => {
-    setAllocations([...allocations, newAllocation]);
-  };
-  const deleteAllocation = (index: number) => {
-    setAllocations(allocations.filter((_, i) => i !== index));
-  };
-
   const allocationCollection = new AllocationCollection(allocations);
   return (
     <div className="allocation-tab">
-      <div className="totals">
-        <Total
-          label="Salary Take-Home"
-          allocated={allocationCollection.salaryTotal}
-          total={paycheckCollection.nonBonusNetPay}
-          className="salary"
-        />
-        <Total
-          label="Irregular Income"
-          allocated={allocationCollection.irregularTotal}
-          total={paycheckCollection.irregularIncome}
-          className="irregular"
-        />
-      </div>
-      <div>
+      <Total
+        label="Salary Take-Home"
+        allocated={allocationCollection.salaryTotal}
+        total={paycheckCollection.nonBonusNetPay}
+        className="salary"
+      />
+      <div className="sliders">
         {expenseSliderValues.map(({ expense, values }, index) => (
           <>
             <span>{expense.name}</span>
@@ -154,6 +137,12 @@ export const AllocationTab: FC<AllocationTabProps> = ({
           </>
         ))}
       </div>
+      <Total
+        label="Irregular Income"
+        allocated={allocationCollection.irregularTotal}
+        total={paycheckCollection.irregularIncome}
+        className="irregular"
+      />
     </div>
   );
 };

@@ -1,66 +1,66 @@
 .allocation-tab {
-  .totals {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
 
-    .total.salary {
-      strong.label {
-        color: #83a9ff;
-      }
-    }
-
-    .total.irregular {
-      strong.label {
-        color: #15b96f;
-      }
-    }
-
-    .total.error {
-      color: red;
+  .total.salary {
+    .label {
+      color: #83a9ff;
+      font-weight: bold;
     }
   }
 
-  table {
-    margin: 0 auto;
+  .total.irregular {
+    .label {
+      color: #15b96f;
+      font-weight: bold;
+    }
   }
 
-  .horizontal-slider {
-    width: 100%;
-    max-width: 500px;
-    margin: auto;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
+  .total.error {
+    color: red;
   }
-  .example-thumb {
-    cursor: pointer;
-    z-index: 100;
-    background: #ffffff;
-    border: 5px solid #3774ff;
-    border-radius: 100%;
-    display: block;
-    box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
-  }
-  .example-thumb.active {
-    background-color: grey;
-  }
-  .example-track {
-    background: #ddd;
-  }
-  .example-track.example-track-0 {
-    background: #83a9ff;
-  }
-  .example-track.example-track-2 {
-    background: #15b96f;
-  }
-  .horizontal-slider .example-track {
-    height: 4px;
-  }
-  .horizontal-slider .example-thumb {
-    width: 10px;
-    outline: none;
-    height: 10px;
-    line-height: 38px;
+
+  .sliders {
+    min-width: 400px;
+    .horizontal-slider {
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+    }
+    .example-thumb {
+      cursor: pointer;
+      z-index: 100;
+      background: #ffffff;
+      border: 5px solid #3774ff;
+      border-radius: 100%;
+      display: block;
+      box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
+    }
+    .example-thumb.active {
+      background-color: grey;
+    }
+    .example-track {
+      background: #ddd;
+    }
+    .example-track.example-track-0 {
+      background: #83a9ff;
+    }
+    .example-track.example-track-2 {
+      background: #15b96f;
+    }
+    .horizontal-slider .example-track {
+      height: 4px;
+    }
+    .horizontal-slider .example-thumb {
+      width: 10px;
+      outline: none;
+      height: 10px;
+      line-height: 38px;
+    }
   }
 }

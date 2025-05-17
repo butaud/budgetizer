@@ -3,7 +3,7 @@
 
   .tabster-tabs {
     display: flex;
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     border-bottom: 2px solid #000;
 
     .tabster-tab {
@@ -20,5 +20,9 @@
         background-color: white;
       }
     }
+  }
+
+  .tabster-content {
+    padding: 20px;
   }
 }

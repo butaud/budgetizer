@@ -93,7 +93,7 @@ export const Diagram = ({
           source: "Shortfall",
           target: "Unallocated Spending",
           value: Math.abs(diff),
-          sourceColor: "red",
+          sourceColor: "#d62728", // red
         },
       ]);
     } else if (diff > 0) {
@@ -102,7 +102,7 @@ export const Diagram = ({
           source: "Unallocated Spending",
           target: "Surplus",
           value: diff,
-          targetColor: "green",
+          targetColor: "#2ca02c", // green
         },
       ]);
     }

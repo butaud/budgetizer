@@ -466,7 +466,14 @@ export class SankeyData {
     const lines = this.flows.map(
       (link) => `${link.source} [${link.value.toFixed(2)}] ${link.target}`
     );
-
+    this.flows.forEach((link) => {
+      if (link.sourceColor) {
+        lines.push(`:${link.source} ${link.sourceColor}`);
+      }
+      if (link.targetColor) {
+        lines.push(`:${link.target} ${link.targetColor}`);
+      }
+    });
     return lines.join("\n");
   }
 }

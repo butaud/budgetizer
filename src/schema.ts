@@ -428,6 +428,8 @@ export type SankeyFlow = {
   source: string;
   target: string;
   value: number;
+  sourceColor?: string;
+  targetColor?: string;
 };
 
 export class SankeyData {
@@ -452,10 +454,10 @@ export class SankeyData {
     const nodes: SankeyD3Props["data"]["nodes"] = [];
     links.forEach((link) => {
       if (!nodes.some((node) => node.id === link.source)) {
-        nodes.push({ id: link.source });
+        nodes.push({ id: link.source, color: link.sourceColor });
       }
       if (!nodes.some((node) => node.id === link.target)) {
-        nodes.push({ id: link.target });
+        nodes.push({ id: link.target, color: link.targetColor });
       }
     });
     return { nodes, links };

@@ -1,13 +1,28 @@
-import { schemeCategory10, scaleOrdinal } from "d3";
+import { scaleOrdinal } from "d3";
 import { sankey, sankeyCenter, sankeyLinkHorizontal } from "d3-sankey";
 import { FC } from "react";
 
 import "./SankeyD3.css";
 import { SankeyFlow } from "../schema";
 
+const colorScheme = [
+  "#1f77b4",
+  "#ff7f0e",
+  // Remove green and red since we use them for
+  // shortfall and surplus
+  // "#2ca02c",
+  // "#d62728",
+  "#9467bd",
+  "#8c564b",
+  "#e377c2",
+  "#7f7f7f",
+  "#bcbd22",
+  "#17becf",
+];
+
 export type SankeyD3Props = {
   data: {
-    nodes: { id: string }[];
+    nodes: { id: string; color?: string }[];
     links: SankeyFlow[];
   };
   width: number;
@@ -32,8 +47,8 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
     document.body.clientWidth,
     width
   );
-  const colorScale = scaleOrdinal(schemeCategory10);
-  const sankeyGenerator = sankey<{ id: string }, {}>()
+  const colorScale = scaleOrdinal(colorScheme);
+  const sankeyGenerator = sankey<{ id: string; color?: string }, {}>()
     .nodeWidth(26)
     .nodePadding(29)
     .extent([
@@ -52,7 +67,7 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
         x={node.x0}
         y={node.y0}
         stroke={"black"}
-        fill={colorScale(node.id) ?? "#000"}
+        fill={node.color ?? colorScale(node.id) ?? "#000"}
         fillOpacity={0.8}
         rx={0.9}
         className="node"
@@ -69,7 +84,7 @@ export const SankeyD3: FC<SankeyD3Props> = ({ data, width, height }) => {
         ? colorScale(link.source)
         : typeof link.source === "number"
         ? colorScale(link.source.toString())
-        : colorScale(link.source.id);
+        : link.source.color ?? colorScale(link.source.id);
 
     return (
       <path

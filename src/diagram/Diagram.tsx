@@ -82,7 +82,30 @@ export const Diagram = ({
       }
     });
 
-    // TODO: Calculate shortfall or surplus
+    // Calculate shortfall or surplus
+    const netIncome =
+      paycheckCollection.irregularIncome + paycheckCollection.nonBonusNetPay;
+    const totalExpenses = expenseCollection.total;
+    const diff = netIncome - totalExpenses;
+    if (diff < 0) {
+      sankeyData.append([
+        {
+          source: "Shortfall",
+          target: "Unallocated Spending",
+          value: Math.abs(diff),
+          sourceColor: "red",
+        },
+      ]);
+    } else if (diff > 0) {
+      sankeyData.append([
+        {
+          source: "Unallocated Spending",
+          target: "Surplus",
+          value: diff,
+          targetColor: "green",
+        },
+      ]);
+    }
   }
   const height = mode === "allocation" ? 600 : 500;
   return (

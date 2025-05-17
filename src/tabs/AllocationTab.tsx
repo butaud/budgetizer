@@ -7,6 +7,8 @@ import {
 } from "../schema";
 
 import "./AllocationTab.css";
+import exp from "constants";
+import ReactSlider from "react-slider";
 
 export type AllocationTabProps = {
   allocations: Allocation[];
@@ -40,6 +42,19 @@ export const AllocationTab: FC<AllocationTabProps> = ({
   paycheckCollection,
   expenseCollection,
 }) => {
+  const expenseSliderValues = expenseCollection.expenseList.map((expense) => {
+    const salaryAllocation = allocations.find(
+      (allocation) =>
+        allocation.to === expense.name && allocation.from === "Salary Take-Home"
+    );
+    const irregularAllocation = allocations.find(
+      (allocation) =>
+        allocation.to === expense.name && allocation.from === "Irregular Income"
+    );
+    const salaryValue = salaryAllocation?.value ?? 0;
+    const irregularValue = expense.amount - (irregularAllocation?.value ?? 0);
+    return { expense, values: [salaryValue, irregularValue] };
+  });
   const changeAllocation = (index: number, allocation: Allocation) => {
     const updatedAllocations = [...allocations];
     updatedAllocations[index] = allocation;
@@ -67,92 +82,62 @@ export const AllocationTab: FC<AllocationTabProps> = ({
           total={paycheckCollection.irregularIncome}
         />
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Amount</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allocations.map((allocation, index) => (
-            <tr key={index}>
-              <td>
-                <select
-                  value={allocation.from}
-                  onChange={(e) => {
-                    if (
-                      e.target.value === "Salary Take-Home" ||
-                      e.target.value === "Irregular Income"
-                    ) {
-                      changeAllocation(index, {
-                        ...allocation,
-                        from: e.target.value,
-                      });
-                    }
-                  }}
-                >
-                  <option value="Salary Take-Home">Salary Take-Home</option>
-                  <option value="Irregular Income">Irregular Income</option>
-                </select>
-              </td>
-              <td>
-                <select
-                  value={allocation.to}
-                  onChange={(e) =>
-                    changeAllocation(index, {
-                      ...allocation,
-                      to: e.target.value,
-                    })
-                  }
-                >
-                  <option value="Unallocated Spending">
-                    Unallocated Spending
-                  </option>
-                  {expenseCollection.names.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td>
-                <input
-                  type="number"
-                  value={allocation.value}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) =>
-                    changeAllocation(index, {
-                      ...allocation,
-                      value: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </td>
-              <td>
-                <button onClick={() => deleteAllocation(index)}>X</button>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td>
-              <button
-                onClick={() =>
-                  addAllocation({
-                    from: "Salary Take-Home",
-                    to: "Unallocated Spending",
-                    value: 0,
-                  })
+      <div>
+        {expenseSliderValues.map(({ expense, values }, index) => (
+          <>
+            <span>{expense.name}</span>
+            <ReactSlider
+              className="horizontal-slider"
+              thumbClassName="example-thumb"
+              trackClassName="example-track"
+              key={expense.name}
+              min={0}
+              max={expense.amount}
+              step={1}
+              value={values}
+              renderThumb={(props, state) => (
+                <div {...props}>{state.valueNow}</div>
+              )}
+              onChange={(newValues) => {
+                const salaryAllocation = allocations.find(
+                  (allocation) =>
+                    allocation.to === expense.name &&
+                    allocation.from === "Salary Take-Home"
+                );
+                const irregularAllocation = allocations.find(
+                  (allocation) =>
+                    allocation.to === expense.name &&
+                    allocation.from === "Irregular Income"
+                );
+                const newSalaryAllocation: Allocation = {
+                  from: "Salary Take-Home",
+                  to: expense.name,
+                  value: newValues[0],
+                };
+                const newIrregularAllocation: Allocation = {
+                  from: "Irregular Income",
+                  to: expense.name,
+                  value: expense.amount - newValues[1],
+                };
+                const updatedAllocations = [...allocations];
+                if (salaryAllocation) {
+                  updatedAllocations[allocations.indexOf(salaryAllocation)] =
+                    newSalaryAllocation;
+                } else {
+                  updatedAllocations.push(newSalaryAllocation);
                 }
-              >
-                + Add Allocation
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                if (irregularAllocation) {
+                  updatedAllocations[allocations.indexOf(irregularAllocation)] =
+                    newIrregularAllocation;
+                } else {
+                  updatedAllocations.push(newIrregularAllocation);
+                }
+                setAllocations(updatedAllocations);
+              }}
+            />
+          </>
+        ))}
+      </div>
     </div>
   );
 };

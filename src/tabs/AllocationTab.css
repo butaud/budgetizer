@@ -12,4 +12,39 @@
   table {
     margin: 0 auto;
   }
+
+  .horizontal-slider {
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+  }
+  .example-thumb {
+    cursor: pointer;
+    z-index: 100;
+    background: #ffffff;
+    border: 5px solid #3774ff;
+    border-radius: 100%;
+    display: block;
+    box-shadow: 0 0 2px 0 rgb(0 0 0 / 44%);
+  }
+  .example-thumb.active {
+    background-color: grey;
+  }
+  .example-track {
+    background: #ddd;
+  }
+  .example-track.example-track-0 {
+    background: #83a9ff;
+  }
+  .horizontal-slider .example-track {
+    height: 4px;
+  }
+  .horizontal-slider .example-thumb {
+    width: 10px;
+    outline: none;
+    height: 10px;
+    line-height: 38px;
+  }
 }

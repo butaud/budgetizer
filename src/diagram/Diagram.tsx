@@ -81,6 +81,8 @@ export const Diagram = ({
         ]);
       }
     });
+
+    // TODO: Calculate shortfall or surplus
   }
   const height = mode === "allocation" ? 600 : 500;
   return (

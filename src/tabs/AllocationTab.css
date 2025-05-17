@@ -4,6 +4,18 @@
     gap: 20px;
     justify-content: center;
 
+    .total.salary {
+      strong.label {
+        color: #83a9ff;
+      }
+    }
+
+    .total.irregular {
+      strong.label {
+        color: #15b96f;
+      }
+    }
+
     .total.error {
       color: red;
     }
@@ -17,6 +29,7 @@
     width: 100%;
     max-width: 500px;
     margin: auto;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
   }
@@ -37,6 +50,9 @@
   }
   .example-track.example-track-0 {
     background: #83a9ff;
+  }
+  .example-track.example-track-2 {
+    background: #15b96f;
   }
   .horizontal-slider .example-track {
     height: 4px;

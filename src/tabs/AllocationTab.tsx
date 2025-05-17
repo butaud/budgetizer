@@ -17,13 +17,20 @@ export type AllocationTabProps = {
   setAllocations: (allocations: Allocation[]) => void;
 };
 
-const Total: FC<{ label: string; allocated: number; total: number }> = ({
-  label,
-  allocated,
-  total,
-}) => (
-  <div className={"total" + (allocated > total ? " error" : "")}>
-    <strong>{label}</strong>: $
+const Total: FC<{
+  label: string;
+  allocated: number;
+  total: number;
+  className?: string;
+}> = ({ label, allocated, total, className }) => (
+  <div
+    className={
+      "total" +
+      (allocated > total ? " error" : "") +
+      (className ? " " + className : "")
+    }
+  >
+    <strong className="label">{label}</strong>: $
     {allocated.toLocaleString("en-US", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -75,11 +82,13 @@ export const AllocationTab: FC<AllocationTabProps> = ({
           label="Salary Take-Home"
           allocated={allocationCollection.salaryTotal}
           total={paycheckCollection.nonBonusNetPay}
+          className="salary"
         />
         <Total
           label="Irregular Income"
           allocated={allocationCollection.irregularTotal}
           total={paycheckCollection.irregularIncome}
+          className="irregular"
         />
       </div>
       <div>
@@ -94,9 +103,16 @@ export const AllocationTab: FC<AllocationTabProps> = ({
               min={0}
               max={expense.amount}
               step={1}
+              pearling
               value={values}
-              renderThumb={(props, state) => (
-                <div {...props}>{state.valueNow}</div>
+              renderTrack={(props, state) => (
+                <div {...props}>
+                  {state.index === 0
+                    ? values[0]
+                    : state.index === 2
+                    ? expense.amount - values[1]
+                    : ""}
+                </div>
               )}
               onChange={(newValues) => {
                 const salaryAllocation = allocations.find(

@@ -83,94 +83,38 @@ export class ExpenseCollection extends Collection<Expense> {
   }
 }
 
-export class AllocationCollection {
-  private allocations: Allocation[];
-  private subscriptions: (() => void)[] = [];
-
-  constructor(allocations: Allocation[]) {
-    this.allocations = allocations;
+export class AllocationCollection extends Collection<Allocation> {
+  hashItem(item: Allocation): string {
+    return `${item.from}:${item.to}:${item.value}`;
   }
-
-  get length(): number {
-    return this.allocations.length;
-  }
-
-  get allocationList(): Allocation[] {
-    return this.allocations;
-  }
-
-  get hash(): string {
-    return this.allocations
-      .map(
-        (allocation) =>
-          `${allocation.from}:${allocation.to}:${allocation.value}`
-      )
-      .join(",");
-  }
-
-  subscribe(callback: () => void): () => void {
-    this.subscriptions.push(callback);
-    return () => {
-      const index = this.subscriptions.indexOf(callback);
-      if (index !== -1) {
-        this.subscriptions.splice(index, 1);
-      }
-    };
-  }
-
-  private notify(): void {
-    this.subscriptions.forEach((callback) => callback());
-  }
-
-  upsertAllocation(allocation: Allocation): void {
-    const index = this.allocations.findIndex(
-      (a) => a.from === allocation.from && a.to === allocation.to
-    );
-    if (index !== -1) {
-      this.allocations[index] = allocation;
-    } else {
-      this.allocations.push(allocation);
-    }
-    this.notify();
-  }
-
-  removeAllocation(allocation: Allocation): void {
-    const index = this.allocations.findIndex(
-      (a) => a.from === allocation.from && a.to === allocation.to
-    );
-    if (index !== -1) {
-      this.allocations.splice(index, 1);
-      this.notify();
-    }
+  areItemsEqual(item1: Allocation, item2: Allocation): boolean {
+    return item1.from === item2.from && item1.to === item2.to;
   }
 
   get total(): number {
-    return this.allocations.reduce(
-      (acc, allocation) => acc + allocation.value,
-      0
-    );
+    return this.itemList.reduce((acc, allocation) => acc + allocation.value, 0);
   }
 
   get irregularTotal(): number {
-    return this.allocations
+    return this.itemList
       .filter((allocation) => allocation.from === "Irregular Income")
       .reduce((acc, allocation) => acc + allocation.value, 0);
   }
 
   get salaryTotal(): number {
-    return this.allocations
+    return this.itemList
       .filter((allocation) => allocation.from === "Salary Take-Home")
       .reduce((acc, allocation) => acc + allocation.value, 0);
   }
 
   getAllocatedAmount(name: string): number {
-    return this.allocations
+    return this.itemList
       .filter((allocation) => allocation.to === name)
       .reduce((acc, allocation) => acc + allocation.value, 0);
   }
 
   get sankeyData(): SankeyData {
-    const flows: SankeyFlow[] = this.allocations.map((allocation) => ({
+    const flows: SankeyFlow[] = this.itemList.map((allocation) => ({
       source: allocation.from,
       target: allocation.to,
       value: allocation.value,
@@ -210,7 +154,7 @@ export const useAllocationCollection = (): AllocationCollection => {
 
   useEffect(() => {
     return collectionRef.current.subscribe(() => {
-      const newAllocations = collectionRef.current.allocationList;
+      const newAllocations = collectionRef.current.itemList;
       window.localStorage.setItem(
         "allocations",
         JSON.stringify(newAllocations)

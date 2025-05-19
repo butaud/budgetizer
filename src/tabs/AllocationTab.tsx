@@ -47,11 +47,11 @@ export const AllocationTab: FC<AllocationTabProps> = ({
   expenseCollection,
 }) => {
   const expenseSliderValues = expenseCollection.itemList.map((expense) => {
-    const salaryAllocation = allocationCollection.allocationList.find(
+    const salaryAllocation = allocationCollection.itemList.find(
       (allocation) =>
         allocation.to === expense.name && allocation.from === "Salary Take-Home"
     );
-    const irregularAllocation = allocationCollection.allocationList.find(
+    const irregularAllocation = allocationCollection.itemList.find(
       (allocation) =>
         allocation.to === expense.name && allocation.from === "Irregular Income"
     );
@@ -100,8 +100,8 @@ export const AllocationTab: FC<AllocationTabProps> = ({
                   to: expense.name,
                   value: expense.amount - newValues[1],
                 };
-                allocationCollection.upsertAllocation(newSalaryAllocation);
-                allocationCollection.upsertAllocation(newIrregularAllocation);
+                allocationCollection.upsertItem(newSalaryAllocation);
+                allocationCollection.upsertItem(newIrregularAllocation);
               }}
             />
           </Fragment>

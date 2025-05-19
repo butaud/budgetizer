@@ -1,16 +1,15 @@
+import { ExpenseCollection } from "../data/collection";
+import { generateRandomId } from "../data/utils";
 import { Expense } from "../schema";
 import "./ExpensesTab.css";
 
 export type ExpensesTabProps = {
-  expenses: Expense[];
-  setExpenses: (expenses: Expense[]) => void;
+  expenseCollection: ExpenseCollection;
 };
 
-export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
-  const handleExpenseChange = (index: number, expense: Expense) => {
-    const updatedExpenses = [...expenses];
-    updatedExpenses[index] = expense;
-    setExpenses(updatedExpenses);
+export const ExpensesTab = ({ expenseCollection }: ExpensesTabProps) => {
+  const handleExpenseChange = (expense: Expense) => {
+    expenseCollection.upsertExpense(expense);
   };
   return (
     <div className="expenses-tab">
@@ -23,7 +22,7 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
           </tr>
         </thead>
         <tbody>
-          {expenses.map((expense, index) => (
+          {expenseCollection.expenseList.map((expense, index) => (
             <tr key={index}>
               <td>
                 <input
@@ -32,8 +31,8 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
                   autoFocus
                   onFocus={(e) => e.target.select()}
                   onChange={(e) =>
-                    handleExpenseChange(index, {
-                      amount: expense.amount,
+                    handleExpenseChange({
+                      ...expense,
                       name: e.target.value,
                     })
                   }
@@ -45,7 +44,8 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
                   value={expense.amount}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) =>
-                    handleExpenseChange(index, {
+                    handleExpenseChange({
+                      ...expense,
                       name: expense.name,
                       amount: parseFloat(e.target.value),
                     })
@@ -54,9 +54,7 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
               </td>
               <td>
                 <button
-                  onClick={() =>
-                    setExpenses(expenses.filter((_, i) => i !== index))
-                  }
+                  onClick={() => expenseCollection.removeExpense(expense)}
                 >
                   X
                 </button>
@@ -67,7 +65,11 @@ export const ExpensesTab = ({ expenses, setExpenses }: ExpensesTabProps) => {
             <td>
               <button
                 onClick={() =>
-                  setExpenses([...expenses, { name: "New Expense", amount: 0 }])
+                  expenseCollection.upsertExpense({
+                    id: generateRandomId(),
+                    name: "New Expense",
+                    amount: 0,
+                  })
                 }
               >
                 + Add Expense

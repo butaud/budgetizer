@@ -2,12 +2,12 @@ import { FC } from "react";
 import {
   Allocation,
   AllocationCollection,
-  ExpenseCollection,
   PaycheckCollection,
 } from "../schema";
 
 import "./AllocationTab.css";
 import ReactSlider from "react-slider";
+import { ExpenseCollection } from "../data/collection";
 
 export type AllocationTabProps = {
   allocations: Allocation[];

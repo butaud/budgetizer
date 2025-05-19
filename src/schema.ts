@@ -479,42 +479,10 @@ export class SankeyData {
 }
 
 export type Expense = {
+  id: number;
   name: string;
   amount: number;
 };
-
-export class ExpenseCollection {
-  private expenses: Expense[];
-
-  constructor(expenses: Expense[]) {
-    this.expenses = expenses;
-  }
-
-  get length(): number {
-    return this.expenses.length;
-  }
-
-  get expenseList(): Expense[] {
-    return this.expenses;
-  }
-
-  get total(): number {
-    return this.expenses.reduce((acc, expense) => acc + expense.amount, 0);
-  }
-
-  get names(): string[] {
-    return this.expenses.map((expense) => expense.name);
-  }
-
-  get sankeyData(): SankeyData {
-    const flows: SankeyFlow[] = this.expenses.map((expense) => ({
-      source: "Expenses",
-      target: expense.name,
-      value: expense.amount,
-    }));
-    return new SankeyData(flows);
-  }
-}
 
 export type Allocation = {
   from: "Irregular Income" | "Salary Take-Home";

@@ -1,6 +1,5 @@
 import {
   AllocationCollection,
-  ExpenseCollection,
   PaycheckCollection,
   SankeyData,
 } from "../schema";
@@ -9,6 +8,7 @@ import { SankeyLink } from "./SankeyLink";
 
 import "./Diagram.css";
 import { useState } from "react";
+import { ExpenseCollection } from "../data/collection";
 
 export type DiagramProps = {
   paycheckCollection: PaycheckCollection;

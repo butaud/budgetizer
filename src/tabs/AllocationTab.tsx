@@ -1,19 +1,14 @@
-import { FC } from "react";
-import {
-  Allocation,
-  AllocationCollection,
-  PaycheckCollection,
-} from "../schema";
+import { FC, Fragment } from "react";
+import { Allocation, PaycheckCollection } from "../schema";
 
 import "./AllocationTab.css";
 import ReactSlider from "react-slider";
-import { ExpenseCollection } from "../data/collection";
+import { AllocationCollection, ExpenseCollection } from "../data/collection";
 
 export type AllocationTabProps = {
-  allocations: Allocation[];
+  allocationCollection: AllocationCollection;
   paycheckCollection: PaycheckCollection;
   expenseCollection: ExpenseCollection;
-  setAllocations: (allocations: Allocation[]) => void;
 };
 
 const Total: FC<{
@@ -47,17 +42,16 @@ const Total: FC<{
 );
 
 export const AllocationTab: FC<AllocationTabProps> = ({
-  allocations,
-  setAllocations,
+  allocationCollection,
   paycheckCollection,
   expenseCollection,
 }) => {
   const expenseSliderValues = expenseCollection.expenseList.map((expense) => {
-    const salaryAllocation = allocations.find(
+    const salaryAllocation = allocationCollection.allocationList.find(
       (allocation) =>
         allocation.to === expense.name && allocation.from === "Salary Take-Home"
     );
-    const irregularAllocation = allocations.find(
+    const irregularAllocation = allocationCollection.allocationList.find(
       (allocation) =>
         allocation.to === expense.name && allocation.from === "Irregular Income"
     );
@@ -65,7 +59,6 @@ export const AllocationTab: FC<AllocationTabProps> = ({
     const irregularValue = expense.amount - (irregularAllocation?.value ?? 0);
     return { expense, values: [salaryValue, irregularValue] };
   });
-  const allocationCollection = new AllocationCollection(allocations);
   return (
     <div className="allocation-tab">
       <Total
@@ -76,13 +69,12 @@ export const AllocationTab: FC<AllocationTabProps> = ({
       />
       <div className="sliders">
         {expenseSliderValues.map(({ expense, values }, index) => (
-          <>
+          <Fragment key={expense.name}>
             <span>{expense.name}</span>
             <ReactSlider
               className="horizontal-slider"
               thumbClassName="example-thumb"
               trackClassName="example-track"
-              key={expense.name}
               min={0}
               max={expense.amount}
               step={1}
@@ -98,16 +90,6 @@ export const AllocationTab: FC<AllocationTabProps> = ({
                 </div>
               )}
               onChange={(newValues) => {
-                const salaryAllocation = allocations.find(
-                  (allocation) =>
-                    allocation.to === expense.name &&
-                    allocation.from === "Salary Take-Home"
-                );
-                const irregularAllocation = allocations.find(
-                  (allocation) =>
-                    allocation.to === expense.name &&
-                    allocation.from === "Irregular Income"
-                );
                 const newSalaryAllocation: Allocation = {
                   from: "Salary Take-Home",
                   to: expense.name,
@@ -118,23 +100,11 @@ export const AllocationTab: FC<AllocationTabProps> = ({
                   to: expense.name,
                   value: expense.amount - newValues[1],
                 };
-                const updatedAllocations = [...allocations];
-                if (salaryAllocation) {
-                  updatedAllocations[allocations.indexOf(salaryAllocation)] =
-                    newSalaryAllocation;
-                } else {
-                  updatedAllocations.push(newSalaryAllocation);
-                }
-                if (irregularAllocation) {
-                  updatedAllocations[allocations.indexOf(irregularAllocation)] =
-                    newIrregularAllocation;
-                } else {
-                  updatedAllocations.push(newIrregularAllocation);
-                }
-                setAllocations(updatedAllocations);
+                allocationCollection.upsertAllocation(newSalaryAllocation);
+                allocationCollection.upsertAllocation(newIrregularAllocation);
               }}
             />
-          </>
+          </Fragment>
         ))}
       </div>
       <Total

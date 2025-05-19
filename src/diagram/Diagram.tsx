@@ -1,14 +1,10 @@
-import {
-  AllocationCollection,
-  PaycheckCollection,
-  SankeyData,
-} from "../schema";
+import { PaycheckCollection, SankeyData } from "../schema";
 import { SankeyD3 } from "./SankeyD3";
 import { SankeyLink } from "./SankeyLink";
 
 import "./Diagram.css";
 import { useState } from "react";
-import { ExpenseCollection } from "../data/collection";
+import { AllocationCollection, ExpenseCollection } from "../data/collection";
 
 export type DiagramProps = {
   paycheckCollection: PaycheckCollection;

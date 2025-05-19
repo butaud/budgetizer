@@ -2,12 +2,15 @@ import "./App.css";
 import { useStickyState } from "./hooks";
 import { IncomeForm } from "./income/IncomeForm";
 import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
-import { Allocation, AllocationCollection, PaycheckCollection } from "./schema";
+import { PaycheckCollection } from "./schema";
 import { AllocationTab } from "./tabs/AllocationTab";
 import { Tabster } from "./tabs/Tabster";
 import { ExpensesTab } from "./tabs/ExpensesTab";
 import { Diagram } from "./diagram/Diagram";
-import { useExpenseCollection } from "./data/collection";
+import {
+  useAllocationCollection,
+  useExpenseCollection,
+} from "./data/collection";
 
 function App() {
   const [savedPaycheckData, setSavedPaycheckData] = useStickyState<string>(
@@ -15,14 +18,10 @@ function App() {
     "[]"
   );
   const [activeTab, setActiveTab] = useStickyState<number>("activeTab", 0);
-  const [allocations, setAllocations] = useStickyState<Allocation[]>(
-    "allocations",
-    []
-  );
   const expenseCollection = useExpenseCollection();
+  const allocationCollection = useAllocationCollection();
 
   const paycheckCollection = PaycheckCollection.fromString(savedPaycheckData);
-  const allocationCollection = new AllocationCollection(allocations);
 
   return (
     <div className="App">
@@ -59,8 +58,7 @@ function App() {
                   label: "Allocation",
                   content: (
                     <AllocationTab
-                      allocations={allocations}
-                      setAllocations={setAllocations}
+                      allocationCollection={allocationCollection}
                       paycheckCollection={paycheckCollection}
                       expenseCollection={expenseCollection}
                     />

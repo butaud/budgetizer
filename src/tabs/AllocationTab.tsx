@@ -46,7 +46,7 @@ export const AllocationTab: FC<AllocationTabProps> = ({
   paycheckCollection,
   expenseCollection,
 }) => {
-  const expenseSliderValues = expenseCollection.expenseList.map((expense) => {
+  const expenseSliderValues = expenseCollection.itemList.map((expense) => {
     const salaryAllocation = allocationCollection.allocationList.find(
       (allocation) =>
         allocation.to === expense.name && allocation.from === "Salary Take-Home"

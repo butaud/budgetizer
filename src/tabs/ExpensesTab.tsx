@@ -9,7 +9,7 @@ export type ExpensesTabProps = {
 
 export const ExpensesTab = ({ expenseCollection }: ExpensesTabProps) => {
   const handleExpenseChange = (expense: Expense) => {
-    expenseCollection.upsertExpense(expense);
+    expenseCollection.upsertItem(expense);
   };
   return (
     <div className="expenses-tab">
@@ -22,7 +22,7 @@ export const ExpensesTab = ({ expenseCollection }: ExpensesTabProps) => {
           </tr>
         </thead>
         <tbody>
-          {expenseCollection.expenseList.map((expense, index) => (
+          {expenseCollection.itemList.map((expense, index) => (
             <tr key={index}>
               <td>
                 <input
@@ -53,9 +53,7 @@ export const ExpensesTab = ({ expenseCollection }: ExpensesTabProps) => {
                 />
               </td>
               <td>
-                <button
-                  onClick={() => expenseCollection.removeExpense(expense)}
-                >
+                <button onClick={() => expenseCollection.removeItem(expense)}>
                   X
                 </button>
               </td>
@@ -65,7 +63,7 @@ export const ExpensesTab = ({ expenseCollection }: ExpensesTabProps) => {
             <td>
               <button
                 onClick={() =>
-                  expenseCollection.upsertExpense({
+                  expenseCollection.upsertItem({
                     id: generateRandomId(),
                     name: "New Expense",
                     amount: 0,

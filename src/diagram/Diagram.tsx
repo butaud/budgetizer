@@ -56,7 +56,7 @@ export const Diagram = ({
           paycheckCollection.nonBonusNetPay - allocationCollection.salaryTotal,
       },
     ]);
-    expenseCollection.expenseList.forEach((expense) => {
+    expenseCollection.itemList.forEach((expense) => {
       const allocatedAmount = allocationCollection.getAllocatedAmount(
         expense.name
       );
@@ -102,6 +102,13 @@ export const Diagram = ({
         },
       ]);
     }
+  }
+
+  if (
+    sankeyData.flows.length === 0 ||
+    sankeyData.flows.every((f) => f.value === 0)
+  ) {
+    return null;
   }
   const height = mode === "allocation" ? 600 : 500;
   return (

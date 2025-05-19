@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Allocation, Expense, SankeyData, SankeyFlow } from "../schema";
 
-export class ExpenseCollection {
-  private expenses: Expense[];
+export abstract class Collection<T> {
+  protected items: T[];
   private subscriptions: (() => void)[] = [];
 
-  constructor(expenses: Expense[]) {
-    this.expenses = expenses;
+  constructor(items: T[]) {
+    this.items = items;
   }
-
   subscribe(callback: () => void): () => void {
     this.subscriptions.push(callback);
     return () => {
@@ -18,52 +17,64 @@ export class ExpenseCollection {
       }
     };
   }
-
   private notify(): void {
     this.subscriptions.forEach((callback) => callback());
   }
-
   get length(): number {
-    return this.expenses.length;
+    return this.items.length;
+  }
+  get itemList(): T[] {
+    return this.items;
   }
 
-  get expenseList(): Expense[] {
-    return this.expenses;
-  }
-
-  get total(): number {
-    return this.expenses.reduce((acc, expense) => acc + expense.amount, 0);
-  }
-
-  get names(): string[] {
-    return this.expenses.map((expense) => expense.name);
-  }
-
+  abstract hashItem(item: T): string;
   get hash(): string {
-    return this.expenses
-      .map((expense) => `${expense.name}:${expense.amount}`)
-      .join(",");
+    return this.items.map((item) => this.hashItem(item)).join(",");
   }
 
-  upsertExpense(expense: Expense): void {
-    const index = this.expenses.findIndex((e) => e.id === expense.id);
+  abstract areItemsEqual(item1: T, item2: T): boolean;
+
+  findItemIndex(item: T): number {
+    return this.items.findIndex((i) => this.areItemsEqual(i, item));
+  }
+
+  upsertItem(item: T): void {
+    const index = this.findItemIndex(item);
     if (index !== -1) {
-      this.expenses[index] = expense;
+      this.items[index] = item;
     } else {
-      this.expenses.push(expense);
+      this.items.push(item);
     }
     this.notify();
   }
-  removeExpense(expense: Expense): void {
-    const index = this.expenses.findIndex((e) => e.id === expense.id);
+  removeItem(item: T): void {
+    const index = this.findItemIndex(item);
     if (index !== -1) {
-      this.expenses.splice(index, 1);
+      this.items.splice(index, 1);
       this.notify();
     }
   }
+}
+
+export class ExpenseCollection extends Collection<Expense> {
+  hashItem(item: Expense): string {
+    return `${item.name}:${item.amount}`;
+  }
+
+  areItemsEqual(item1: Expense, item2: Expense): boolean {
+    return item1.id === item2.id;
+  }
+
+  get total(): number {
+    return this.items.reduce((acc, expense) => acc + expense.amount, 0);
+  }
+
+  get names(): string[] {
+    return this.items.map((expense) => expense.name);
+  }
 
   get sankeyData(): SankeyData {
-    const flows: SankeyFlow[] = this.expenses.map((expense) => ({
+    const flows: SankeyFlow[] = this.items.map((expense) => ({
       source: "Expenses",
       target: expense.name,
       value: expense.amount,
@@ -178,7 +189,7 @@ export const useExpenseCollection = (): ExpenseCollection => {
 
   useEffect(() => {
     return collectionRef.current.subscribe(() => {
-      const newExpenses = collectionRef.current.expenseList;
+      const newExpenses = collectionRef.current.itemList;
       window.localStorage.setItem("expenses", JSON.stringify(newExpenses));
       setCurrentHash(collectionRef.current.hash);
     });

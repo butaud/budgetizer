@@ -3,7 +3,7 @@ import { sankey, sankeyCenter, sankeyLinkHorizontal } from "d3-sankey";
 import { FC } from "react";
 
 import "./SankeyD3.css";
-import { SankeyFlow } from "../schema";
+import { SankeyFlow } from "../data/items";
 
 const colorScheme = [
   "#1f77b4",

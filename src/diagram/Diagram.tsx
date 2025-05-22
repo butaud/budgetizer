@@ -1,4 +1,4 @@
-import { SankeyData } from "../schema";
+import { SankeyData } from "../data/items";
 import { SankeyD3 } from "./SankeyD3";
 import { SankeyLink } from "./SankeyLink";
 
@@ -8,7 +8,7 @@ import {
   AllocationCollection,
   ExpenseCollection,
   PaycheckCollection,
-} from "../data/collection";
+} from "../data/collections";
 
 export type DiagramProps = {
   paycheckCollection: PaycheckCollection;

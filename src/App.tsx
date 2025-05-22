@@ -1,7 +1,7 @@
 import "./App.css";
 import { useStickyState } from "./hooks";
 import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
-import { Allocation, Expense, Paycheck } from "./schema";
+import { Allocation, Expense, Paycheck } from "./data/items";
 import { AllocationTab } from "./tabs/AllocationTab";
 import { Tabster } from "./tabs/Tabster";
 import { ExpensesTab } from "./tabs/ExpensesTab";
@@ -11,7 +11,7 @@ import {
   ExpenseCollection,
   PaycheckCollection,
   useCollection,
-} from "./data/collection";
+} from "./data/collections";
 
 function App() {
   const [activeTab, setActiveTab] = useStickyState<number>("activeTab", 0);

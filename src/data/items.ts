@@ -1,4 +1,4 @@
-import { SankeyD3Props } from "./diagram/SankeyD3";
+import { SankeyD3Props } from "../diagram/SankeyD3";
 
 export type IncomeConstants = {
   disabilityInsuranceDeduction: number;

@@ -1,11 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Allocation,
-  Expense,
-  Paycheck,
-  SankeyData,
-  SankeyFlow,
-} from "../schema";
+import { Allocation, Expense, Paycheck, SankeyData, SankeyFlow } from "./items";
 
 export abstract class Collection<T> {
   protected items: T[];

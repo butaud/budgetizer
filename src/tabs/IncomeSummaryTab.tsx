@@ -1,7 +1,7 @@
 import { FC } from "react";
 
 import "./IncomeSummaryTab.css";
-import { PaycheckCollection } from "../data/collection";
+import { PaycheckCollection } from "../data/collections";
 import { IncomeForm } from "../income/IncomeForm";
 
 export type IncomeSummaryTabProps = {

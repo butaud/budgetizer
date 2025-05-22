@@ -1,9 +1,9 @@
 import { FC, useState } from "react";
 
 import "./IncomeForm.css";
-import { IncomeConstants, Paycheck } from "../schema";
+import { IncomeConstants, Paycheck } from "../data/items";
 import { useStickyState } from "../hooks";
-import { PaycheckCollection } from "../data/collection";
+import { PaycheckCollection } from "../data/collections";
 
 type IncomeFormProps = {
   paycheckCollection: PaycheckCollection;

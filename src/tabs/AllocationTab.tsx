@@ -1,5 +1,5 @@
 import { FC, Fragment } from "react";
-import { Allocation } from "../schema";
+import { Allocation } from "../data/items";
 
 import "./AllocationTab.css";
 import ReactSlider from "react-slider";
@@ -7,7 +7,7 @@ import {
   AllocationCollection,
   ExpenseCollection,
   PaycheckCollection,
-} from "../data/collection";
+} from "../data/collections";
 
 export type AllocationTabProps = {
   allocationCollection: AllocationCollection;

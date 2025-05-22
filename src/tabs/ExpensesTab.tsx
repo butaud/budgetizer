@@ -1,6 +1,6 @@
-import { ExpenseCollection } from "../data/collection";
+import { ExpenseCollection } from "../data/collections";
 import { generateRandomId } from "../data/utils";
-import { Expense } from "../schema";
+import { Expense } from "../data/items";
 import "./ExpensesTab.css";
 
 export type ExpensesTabProps = {

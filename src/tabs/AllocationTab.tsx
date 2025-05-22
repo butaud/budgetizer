@@ -1,5 +1,5 @@
-import { FC, Fragment } from "react";
-import { Allocation } from "../data/items";
+import { FC, Fragment, useState } from "react";
+import { Allocation, Expense } from "../data/items";
 
 import "./AllocationTab.css";
 import ReactSlider from "react-slider";
@@ -8,6 +8,7 @@ import {
   ExpenseCollection,
   PaycheckCollection,
 } from "../data/collections";
+import { generateRandomId } from "../data/utils";
 
 export type AllocationTabProps = {
   allocationCollection: AllocationCollection;
@@ -63,6 +64,7 @@ export const AllocationTab: FC<AllocationTabProps> = ({
     const irregularValue = expense.amount - (irregularAllocation?.value ?? 0);
     return { expense, values: [salaryValue, irregularValue] };
   });
+
   return (
     <div className="allocation-tab">
       <Total
@@ -74,7 +76,69 @@ export const AllocationTab: FC<AllocationTabProps> = ({
       <div className="sliders">
         {expenseSliderValues.map(({ expense, values }, index) => (
           <Fragment key={expense.name}>
-            <span>{expense.name}</span>
+            <ExpenseHeader
+              expense={expense}
+              removeExpense={() => {
+                expenseCollection.removeItem(expense);
+                allocationCollection.itemList
+                  .filter((allocation) => allocation.to === expense.name)
+                  .forEach((allocation) => {
+                    allocationCollection.removeItem(allocation);
+                  });
+              }}
+              updateAmount={(newAmount) => {
+                expenseCollection.upsertItem({
+                  ...expense,
+                  amount: newAmount,
+                });
+                if (expense.amount !== 0) {
+                  const oldSalaryAllocation =
+                    allocationCollection.itemList.find(
+                      (allocation) =>
+                        allocation.to === expense.name &&
+                        allocation.from === "Salary Take-Home"
+                    );
+                  const oldIrregularAllocation =
+                    allocationCollection.itemList.find(
+                      (allocation) =>
+                        allocation.to === expense.name &&
+                        allocation.from === "Irregular Income"
+                    );
+                  const oldSalaryAllocationRate =
+                    (oldSalaryAllocation?.value ?? 0) / expense.amount;
+                  const oldIrregularAllocationRate =
+                    (expense.amount - (oldIrregularAllocation?.value ?? 0)) /
+                    expense.amount;
+                  const newSalaryAllocation: Allocation = {
+                    from: "Salary Take-Home",
+                    to: expense.name,
+                    value: newAmount * oldSalaryAllocationRate,
+                  };
+                  allocationCollection.upsertItem(newSalaryAllocation);
+                  const newIrregularAllocation: Allocation = {
+                    from: "Irregular Income",
+                    to: expense.name,
+                    value: newAmount * oldIrregularAllocationRate,
+                  };
+                  allocationCollection.upsertItem(newIrregularAllocation);
+                }
+              }}
+              updateTitle={(newTitle) => {
+                expenseCollection.upsertItem({
+                  ...expense,
+                  name: newTitle,
+                });
+                allocationCollection.itemList
+                  .filter((allocation) => allocation.to === expense.name)
+                  .forEach((allocation) => {
+                    allocationCollection.removeItem(allocation);
+                    allocationCollection.upsertItem({
+                      ...allocation,
+                      to: newTitle,
+                    });
+                  });
+              }}
+            />
             <ReactSlider
               className="horizontal-slider"
               thumbClassName="example-thumb"
@@ -87,9 +151,9 @@ export const AllocationTab: FC<AllocationTabProps> = ({
               renderTrack={(props, state) => (
                 <div {...props}>
                   {state.index === 0
-                    ? values[0]
+                    ? values[0].toFixed(0)
                     : state.index === 2
-                    ? expense.amount - values[1]
+                    ? (expense.amount - values[1]).toFixed(0)
                     : ""}
                 </div>
               )}
@@ -110,12 +174,86 @@ export const AllocationTab: FC<AllocationTabProps> = ({
             />
           </Fragment>
         ))}
+        <button
+          onClick={() => {
+            expenseCollection.upsertItem({
+              id: generateRandomId(),
+              name: "New Expense",
+              amount: 0,
+            });
+            allocationCollection.upsertItem({
+              from: "Salary Take-Home",
+              to: "New Expense",
+              value: 0,
+            });
+            allocationCollection.upsertItem({
+              from: "Irregular Income",
+              to: "New Expense",
+              value: 0,
+            });
+          }}
+        >
+          + Add Expense
+        </button>
       </div>
       <Total
         label="Irregular Income"
         allocated={allocationCollection.irregularTotal}
         total={paycheckCollection.irregularIncome}
         className="irregular"
+      />
+    </div>
+  );
+};
+
+type ExpenseHeaderProps = {
+  expense: Expense;
+  removeExpense: () => void;
+  updateTitle: (newTitle: string) => void;
+  updateAmount: (newAmount: number) => void;
+};
+
+const ExpenseHeader: FC<ExpenseHeaderProps> = ({
+  expense,
+  removeExpense,
+  updateTitle,
+  updateAmount,
+}) => {
+  const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+  const [updatedTitle, setUpdatedTitle] = useState(expense.name);
+  return (
+    <div className="expense">
+      <button onClick={removeExpense}>X</button>
+      {isUpdatingTitle ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateTitle(updatedTitle);
+            setIsUpdatingTitle(false);
+          }}
+        >
+          <input
+            type="text"
+            value={updatedTitle}
+            onChange={(e) => setUpdatedTitle(e.target.value)}
+          />
+          <input type="submit"></input>
+        </form>
+      ) : (
+        <span onDoubleClick={() => setIsUpdatingTitle(true)}>
+          {expense.name}
+        </span>
+      )}
+      :{" "}
+      <input
+        type="text"
+        value={expense.amount}
+        onChange={(e) => {
+          const newAmount = parseFloat(e.target.value);
+          if (!isNaN(newAmount)) {
+            updateAmount(newAmount);
+          }
+        }}
       />
     </div>
   );

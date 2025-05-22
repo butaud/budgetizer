@@ -24,6 +24,20 @@
 
   .sliders {
     min-width: 400px;
+
+    .expense {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      margin: 30px 0 10px 0;
+      font-weight: bold;
+
+      input {
+        max-width: 100px;
+      }
+    }
+
     .horizontal-slider {
       width: 100%;
       max-width: 500px;

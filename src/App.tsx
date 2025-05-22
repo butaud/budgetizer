@@ -4,7 +4,6 @@ import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
 import { Allocation, Expense, Paycheck } from "./data/items";
 import { AllocationTab } from "./tabs/AllocationTab";
 import { Tabster } from "./tabs/Tabster";
-import { ExpensesTab } from "./tabs/ExpensesTab";
 import { Diagram } from "./diagram/Diagram";
 import {
   AllocationCollection,
@@ -49,12 +48,6 @@ function App() {
                   ),
                 },
                 {
-                  label: "Expenses",
-                  content: (
-                    <ExpensesTab expenseCollection={expenseCollection} />
-                  ),
-                },
-                {
                   label: "Allocation",
                   content: (
                     <AllocationTab
@@ -71,13 +64,7 @@ function App() {
             paycheckCollection={paycheckCollection}
             expenseCollection={expenseCollection}
             allocationCollection={allocationCollection}
-            mode={
-              activeTab === 0
-                ? "income"
-                : activeTab === 1
-                ? "expenses"
-                : "allocation"
-            }
+            mode={activeTab === 0 ? "income" : "allocation"}
           />
         </>
       )}

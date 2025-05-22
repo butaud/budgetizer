@@ -1,36 +1,39 @@
 import "./App.css";
 import { useStickyState } from "./hooks";
-import { IncomeForm } from "./income/IncomeForm";
 import { IncomeSummaryTab } from "./tabs/IncomeSummaryTab";
-import { PaycheckCollection } from "./schema";
+import { Allocation, Expense, Paycheck } from "./schema";
 import { AllocationTab } from "./tabs/AllocationTab";
 import { Tabster } from "./tabs/Tabster";
 import { ExpensesTab } from "./tabs/ExpensesTab";
 import { Diagram } from "./diagram/Diagram";
 import {
-  useAllocationCollection,
-  useExpenseCollection,
+  AllocationCollection,
+  ExpenseCollection,
+  PaycheckCollection,
+  useCollection,
 } from "./data/collection";
 
 function App() {
-  const [savedPaycheckData, setSavedPaycheckData] = useStickyState<string>(
-    "paycheckData",
-    "[]"
-  );
   const [activeTab, setActiveTab] = useStickyState<number>("activeTab", 0);
-  const expenseCollection = useExpenseCollection();
-  const allocationCollection = useAllocationCollection();
+  const expenseCollection = useCollection<Expense, ExpenseCollection>(
+    "expenses",
+    (expenses) => new ExpenseCollection(expenses)
+  );
+  const allocationCollection = useCollection<Allocation, AllocationCollection>(
+    "allocations",
+    (allocations) => new AllocationCollection(allocations)
+  );
 
-  const paycheckCollection = PaycheckCollection.fromString(savedPaycheckData);
+  const paycheckCollection = useCollection<Paycheck, PaycheckCollection>(
+    "paychecks",
+    (paychecks) => new PaycheckCollection(paychecks),
+    (paycheckRaw: any) => Paycheck.fromString(JSON.stringify(paycheckRaw))
+  );
 
   return (
     <div className="App">
       {paycheckCollection.length === 0 && (
-        <IncomeForm
-          onSubmit={(data) =>
-            setSavedPaycheckData(new PaycheckCollection(data).stringify())
-          }
-        />
+        <IncomeSummaryTab paycheckCollection={paycheckCollection} />
       )}
       {paycheckCollection.length > 0 && (
         <>
@@ -42,10 +45,7 @@ function App() {
                 {
                   label: "Income",
                   content: (
-                    <IncomeSummaryTab
-                      paycheckCollection={paycheckCollection}
-                      onClear={() => setSavedPaycheckData("[]")}
-                    />
+                    <IncomeSummaryTab paycheckCollection={paycheckCollection} />
                   ),
                 },
                 {

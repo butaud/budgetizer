@@ -1,5 +1,25 @@
 .income-summary {
-  li {
-    text-align: left;
+  .income-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      li {
+        text-align: left;
+      }
+    }
+
+    button {
+      max-height: min-content;
+    }
   }
 }

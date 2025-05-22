@@ -47,6 +47,25 @@ export class Paycheck {
     this.netPay = netPay;
   }
 
+  static clone(paycheck: Paycheck): Paycheck {
+    const cloned = new Paycheck(
+      paycheck.constants,
+      paycheck.date,
+      paycheck.payPeriodStart,
+      paycheck.payPeriodEnd,
+      paycheck.grossPay,
+      paycheck.adjustments,
+      paycheck.taxableEarnings,
+      paycheck.taxesWithheld,
+      paycheck.afterTaxDeductions,
+      paycheck.netPay
+    );
+    cloned.salary = paycheck.salary;
+    cloned.perksPlus = paycheck.perksPlus;
+    cloned.stockAwardTaxes = paycheck.stockAwardTaxes;
+    return cloned;
+  }
+
   stringify(): string {
     return JSON.stringify({
       date: this.date,

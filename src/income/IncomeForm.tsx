@@ -3,18 +3,54 @@ import { FC, useState } from "react";
 import "./IncomeForm.css";
 import { IncomeConstants, Paycheck } from "../schema";
 import { useStickyState } from "../hooks";
+import { PaycheckCollection } from "../data/collection";
 
 type IncomeFormProps = {
-  onSubmit: (data: Paycheck[]) => void;
+  paycheckCollection: PaycheckCollection;
+};
+
+const parseMonth = (month: string) => {
+  const monthMap: { [key: string]: string } = {
+    Jan: "01",
+    Feb: "02",
+    Mar: "03",
+    Apr: "04",
+    May: "05",
+    Jun: "06",
+    Jul: "07",
+    Aug: "08",
+    Sep: "09",
+    Oct: "10",
+    Nov: "11",
+    Dec: "12",
+  };
+  return monthMap[month] ?? "";
+};
+
+const reformatCsvDate = (rawDate: string) => {
+  const dateParts = rawDate.split(" ");
+  if (dateParts.length !== 3) {
+    throw new Error(`Invalid date format: ${rawDate}`);
+  }
+  const month = parseMonth(dateParts[0]);
+  const day = parseInt(dateParts[1].substring(0, dateParts[1].length - 1), 10);
+  const year = parseInt(dateParts[2], 10);
+  if (month === "" || isNaN(day) || isNaN(year)) {
+    throw new Error(`Invalid date format: ${rawDate}`);
+  }
+  return `${year}-${month}-${day.toLocaleString("en-US", {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  })}`;
 };
 
 const parsePaycheckTableRow = (row: string, constants: IncomeConstants) => {
   const columns = row.trim().split("\t");
   return new Paycheck(
     constants,
-    columns[0],
-    columns[1],
-    columns[2],
+    reformatCsvDate(columns[0]),
+    reformatCsvDate(columns[1]),
+    reformatCsvDate(columns[2]),
     parseFloat(columns[3].replace(/[$,]/g, "")),
     parseFloat(columns[4].replace(/[$,]/g, "")),
     parseFloat(columns[5].replace(/[$,]/g, "")),
@@ -24,28 +60,16 @@ const parsePaycheckTableRow = (row: string, constants: IncomeConstants) => {
   );
 };
 
-const parsePaycheckTable = (
-  table: string,
-  constants: IncomeConstants,
-  salaries: Record<string, number>,
-  perksPlus: Record<string, number>,
-  stockAwardTaxes: Record<string, number>
-) => {
+const parsePaycheckTable = (table: string, constants: IncomeConstants) => {
   const rows = table
     .split("\n")
     .map((row) => row.trim())
     .filter((row) => row.length > 0 && row.split("\t").length === 9)
-    .map((row) => {
-      const paycheck = parsePaycheckTableRow(row, constants);
-      paycheck.salary = salaries[paycheck.date];
-      paycheck.perksPlus = perksPlus[paycheck.date];
-      paycheck.stockAwardTaxes = stockAwardTaxes[paycheck.date];
-      return paycheck;
-    });
+    .map((row) => parsePaycheckTableRow(row, constants));
   return rows;
 };
 
-export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
+export const IncomeForm: FC<IncomeFormProps> = ({ paycheckCollection }) => {
   const [disabilityInsuranceDeduction, setDisabilityInsuranceDeduction] =
     useStickyState("disabilityInsuranceDeduction", 0);
   const [legalPlanDeduction, setLegalPlanDeduction] = useStickyState(
@@ -58,35 +82,38 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
   );
   const [esppRate, setEsppRate] = useStickyState("esppRate", 0);
   const [paycheckTable, setPaycheckTable] = useState("");
-  const [salaries, setSalaries] = useStickyState<Record<string, number>>(
-    "salaries",
-    {}
-  );
-  const [perksPlus, setPerksPlus] = useStickyState<Record<string, number>>(
-    "perksPlus",
-    {}
-  );
-  const [stockAwardTaxes, setStockAwardTaxes] = useStickyState<
-    Record<string, number>
-  >("stockAwardTaxes", {});
 
-  const rows = parsePaycheckTable(
-    paycheckTable,
-    {
+  console.log(paycheckCollection);
+  const applyCsv = () => {
+    const rows = parsePaycheckTable(paycheckTable, {
       disabilityInsuranceDeduction,
       legalPlanDeduction,
       givingDeduction,
       esppRate,
-    },
-    salaries,
-    perksPlus,
-    stockAwardTaxes
-  );
-  const totalGrossPay = rows.reduce((acc, row) => acc + row.grossPay, 0);
+    });
+
+    paycheckCollection.beginTransaction();
+    rows.forEach((row) => {
+      paycheckCollection.upsertItem(row);
+      console.log(
+        `Upserted paycheck with date ${row.date} and gross pay ${row.grossPay}`
+      );
+    });
+    const paychecksToRemove = paycheckCollection.itemList.filter(
+      (paycheck) => !rows.some((row) => row.date === paycheck.date)
+    );
+    paychecksToRemove.forEach((paycheck) => {
+      paycheckCollection.removeItem(paycheck);
+      console.log(
+        `Removed paycheck with date ${paycheck.date} and gross pay ${paycheck.grossPay}`
+      );
+    });
+    paycheckCollection.commitTransaction();
+    setPaycheckTable("");
+  };
 
   return (
     <div className="income-form">
-      <h2>Step 1: Income</h2>
       <div className="constants">
         <label htmlFor="disabilityInsuranceDeduction">
           Disability Insurance Deduction:
@@ -131,15 +158,10 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
         value={paycheckTable}
         onChange={(e) => setPaycheckTable(e.target.value)}
       />
-      <p>
-        <strong>Total Gross Pay from {rows.length} paychecks:</strong>
-        {" $"}
-        {totalGrossPay.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-      </p>
-      {rows.length > 0 && (
+      <button onClick={applyCsv} disabled={paycheckTable === ""}>
+        Apply CSV
+      </button>
+      {paycheckCollection.length > 0 && (
         <div className="table-container">
           <table>
             <thead>
@@ -168,170 +190,176 @@ export const IncomeForm: FC<IncomeFormProps> = ({ onSubmit }) => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => (
-                <tr key={index}>
-                  <td>{row.payPeriodStart}</td>
-                  <td>
-                    {row.grossPay.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.adjustments.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={row.salary ?? 0}
-                      onChange={(e) => {
-                        const newSalary = parseFloat(
-                          e.target.value.replace(/[$,]/g, "")
-                        );
-                        setSalaries((prev) => ({
-                          ...prev,
-                          [row.date]: newSalary,
-                        }));
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={row.perksPlus ?? 0}
-                      onChange={(e) => {
-                        const newPerksPlus = parseFloat(
-                          e.target.value.replace(/[$,]/g, "")
-                        );
-                        setPerksPlus((prev) => ({
-                          ...prev,
-                          [row.date]: newPerksPlus,
-                        }));
-                      }}
-                    />
-                  </td>
-                  <td>
-                    {row.bonus?.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }) ?? ""}
-                  </td>
-                  <td>
-                    {row.stockVesting.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.taxesWithheld.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={row.stockAwardTaxes ?? 0}
-                      onChange={(e) => {
-                        const newStockAwardTaxes = parseFloat(
-                          e.target.value.replace(/[$,]/g, "")
-                        );
-                        setStockAwardTaxes((prev) => ({
-                          ...prev,
-                          [row.date]: newStockAwardTaxes,
-                        }));
-                      }}
-                    />
-                  </td>
-                  <td>
-                    {row.paycheckTaxesWithheld.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.estSalaryTaxesWithheld?.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }) ?? ""}
-                  </td>
-                  <td>
-                    {row.estBonusTaxesWithheld?.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }) ?? ""}
-                  </td>
-                  <td>
-                    {row.afterTaxDeductions.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.nonStockAfterTaxDeductions.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.nonInvestmentAfterTaxDeductions.toLocaleString(
-                      "en-US",
-                      {
+              {paycheckCollection.itemList
+                .sort((a, b) => {
+                  if (a.payPeriodStart < b.payPeriodStart) {
+                    return -1;
+                  }
+                  if (a.payPeriodStart > b.payPeriodStart) {
+                    return 1;
+                  }
+                  return 0;
+                })
+                .map((row, index) => (
+                  <tr key={index}>
+                    <td>{row.payPeriodStart}</td>
+                    <td>
+                      {row.grossPay.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
-                      }
-                    )}
-                  </td>
-                  <td>
-                    {row.investmentAfterTaxDeductions.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.espp.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.rothIra.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.bonusNetPay.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.nonBonusNetPay.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td>
-                    {row.netStockVestings.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                </tr>
-              ))}
+                      })}
+                    </td>
+                    <td>
+                      {row.adjustments.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={row.salary ?? 0}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const newSalary = parseFloat(
+                            e.target.value.replace(/[$,]/g, "")
+                          );
+                          const cloned = Paycheck.clone(row);
+                          cloned.salary = newSalary;
+                          paycheckCollection.upsertItem(cloned);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={row.perksPlus ?? 0}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const newPerksPlus = parseFloat(
+                            e.target.value.replace(/[$,]/g, "")
+                          );
+                          const cloned = Paycheck.clone(row);
+                          cloned.perksPlus = newPerksPlus;
+                          paycheckCollection.upsertItem(cloned);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      {row.bonus?.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) ?? ""}
+                    </td>
+                    <td>
+                      {row.stockVesting.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.taxesWithheld.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={row.stockAwardTaxes ?? 0}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const newStockAwardTaxes = parseFloat(
+                            e.target.value.replace(/[$,]/g, "")
+                          );
+                          const cloned = Paycheck.clone(row);
+                          cloned.stockAwardTaxes = newStockAwardTaxes;
+                          paycheckCollection.upsertItem(cloned);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      {row.paycheckTaxesWithheld.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.estSalaryTaxesWithheld?.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) ?? ""}
+                    </td>
+                    <td>
+                      {row.estBonusTaxesWithheld?.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }) ?? ""}
+                    </td>
+                    <td>
+                      {row.afterTaxDeductions.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.nonStockAfterTaxDeductions.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.nonInvestmentAfterTaxDeductions.toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
+                    </td>
+                    <td>
+                      {row.investmentAfterTaxDeductions.toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )}
+                    </td>
+                    <td>
+                      {row.espp.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.rothIra.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.bonusNetPay.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.nonBonusNetPay.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      {row.netStockVestings.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-          <button
-            onClick={() => {
-              onSubmit(rows);
-            }}
-          >
-            Submit
-          </button>
         </div>
       )}
     </div>

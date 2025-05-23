@@ -83,7 +83,6 @@ export const IncomeForm: FC<IncomeFormProps> = ({ paycheckCollection }) => {
   const [esppRate, setEsppRate] = useStickyState("esppRate", 0);
   const [paycheckTable, setPaycheckTable] = useState("");
 
-  console.log(paycheckCollection);
   const applyCsv = () => {
     const rows = parsePaycheckTable(paycheckTable, {
       disabilityInsuranceDeduction,
@@ -95,18 +94,12 @@ export const IncomeForm: FC<IncomeFormProps> = ({ paycheckCollection }) => {
     paycheckCollection.beginTransaction();
     rows.forEach((row) => {
       paycheckCollection.upsertItem(row);
-      console.log(
-        `Upserted paycheck with date ${row.date} and gross pay ${row.grossPay}`
-      );
     });
     const paychecksToRemove = paycheckCollection.itemList.filter(
       (paycheck) => !rows.some((row) => row.date === paycheck.date)
     );
     paychecksToRemove.forEach((paycheck) => {
       paycheckCollection.removeItem(paycheck);
-      console.log(
-        `Removed paycheck with date ${paycheck.date} and gross pay ${paycheck.grossPay}`
-      );
     });
     paycheckCollection.commitTransaction();
     setPaycheckTable("");

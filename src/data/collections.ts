@@ -338,15 +338,27 @@ export class AllocationCollection extends Collection<Allocation> {
   }
 }
 
+export type UseCollectionResult<C> = {
+  collection: C;
+  sideloadItems: (rawItems: string) => void;
+};
 export const useCollection = <ItemType, C extends Collection<ItemType>>(
   key: string,
   factory: (items: ItemType[]) => C,
   itemFactory?: (itemRaw: any) => ItemType
-): C => {
-  const items = itemFactory
-    ? JSON.parse(window.localStorage.getItem(key) || "[]").map(itemFactory)
-    : JSON.parse(window.localStorage.getItem(key) || "[]");
+): UseCollectionResult<C> => {
+  const parseItems = (rawItems: string): ItemType[] => {
+    const parsedItems = JSON.parse(rawItems);
+    if (itemFactory) {
+      return parsedItems.map(itemFactory);
+    } else {
+      return parsedItems;
+    }
+  };
+
+  const items = parseItems(window.localStorage.getItem(key) || "[]");
   const collectionRef = useRef<C>(factory(items));
+
   const [, setCurrentHash] = useState(collectionRef.current.hash);
   useEffect(() => {
     return collectionRef.current.subscribe(() => {
@@ -355,5 +367,13 @@ export const useCollection = <ItemType, C extends Collection<ItemType>>(
       setCurrentHash(collectionRef.current.hash);
     });
   }, [key]);
-  return collectionRef.current;
+
+  const sideloadItems = (rawItems: string): void => {
+    const parsedItems = parseItems(rawItems);
+    collectionRef.current.beginTransaction();
+    collectionRef.current.empty();
+    parsedItems.forEach((item) => collectionRef.current.upsertItem(item));
+    collectionRef.current.commitTransaction();
+  };
+  return { collection: collectionRef.current, sideloadItems };
 };

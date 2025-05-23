@@ -11,23 +11,64 @@ import {
   PaycheckCollection,
   useCollection,
 } from "./data/collections";
+import LZString from "lz-string";
+import { useEffect } from "react";
 
 function App() {
   const [activeTab, setActiveTab] = useStickyState<number>("activeTab", 0);
-  const expenseCollection = useCollection<Expense, ExpenseCollection>(
-    "expenses",
-    (expenses) => new ExpenseCollection(expenses)
-  );
-  const allocationCollection = useCollection<Allocation, AllocationCollection>(
+  const { collection: expenseCollection, sideloadItems: sideloadExpenses } =
+    useCollection<Expense, ExpenseCollection>(
+      "expenses",
+      (expenses) => new ExpenseCollection(expenses)
+    );
+  const {
+    collection: allocationCollection,
+    sideloadItems: sideloadAllocations,
+  } = useCollection<Allocation, AllocationCollection>(
     "allocations",
     (allocations) => new AllocationCollection(allocations)
   );
 
-  const paycheckCollection = useCollection<Paycheck, PaycheckCollection>(
-    "paychecks",
-    (paychecks) => new PaycheckCollection(paychecks),
-    (paycheckRaw: any) => Paycheck.fromString(JSON.stringify(paycheckRaw))
+  const { collection: paycheckCollection, sideloadItems: sideloadPaychecks } =
+    useCollection<Paycheck, PaycheckCollection>(
+      "paychecks",
+      (paychecks) => new PaycheckCollection(paychecks),
+      (paycheckRaw: any) => Paycheck.fromString(JSON.stringify(paycheckRaw))
+    );
+
+  const shareCode = LZString.compressToEncodedURIComponent(
+    JSON.stringify({
+      paychecks: paycheckCollection.itemList,
+      expenses: expenseCollection.itemList,
+      allocations: allocationCollection.itemList,
+    })
   );
+  const url = new URL(window.location.href);
+  url.searchParams.set("d", shareCode);
+  const shareLink = url.toString();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get("d");
+    if (data) {
+      const decompressedData = LZString.decompressFromEncodedURIComponent(data);
+      if (decompressedData) {
+        const parsedData = JSON.parse(decompressedData);
+        const { paychecks, expenses, allocations } = parsedData;
+
+        sideloadPaychecks(JSON.stringify(paychecks));
+        sideloadExpenses(JSON.stringify(expenses));
+        sideloadAllocations(JSON.stringify(allocations));
+
+        // Clear the URL parameters
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
+    }
+  }, [sideloadAllocations, sideloadExpenses, sideloadPaychecks]);
 
   return (
     <div className="App">
@@ -37,6 +78,18 @@ function App() {
       {paycheckCollection.length > 0 && (
         <>
           <div>
+            <div className="share-link">
+              <label htmlFor="share-link-input">Share link:</label>
+              <input
+                name="share-link-input"
+                type="text"
+                onFocus={(e) => e.currentTarget.select()}
+                value={shareLink}
+              ></input>
+              <button onClick={() => navigator.clipboard.writeText(shareLink)}>
+                Copy
+              </button>
+            </div>
             <Tabster
               activeTab={activeTab}
               setActiveTab={setActiveTab}

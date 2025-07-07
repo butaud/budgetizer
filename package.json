@@ -1,7 +1,7 @@
 {
   "name": "budgetizer",
   "version": "0.1.0",
-  "homepage": "https://butaud.github.io/budgetizer",
+  "homepage": "https://budgetizer.butaud.com",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",

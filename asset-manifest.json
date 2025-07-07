@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/budgetizer/static/css/main.bef6bebe.css",
-    "main.js": "/budgetizer/static/js/main.59e02f24.js",
-    "static/js/453.b432b3b9.chunk.js": "/budgetizer/static/js/453.b432b3b9.chunk.js",
-    "index.html": "/budgetizer/index.html",
-    "main.bef6bebe.css.map": "/budgetizer/static/css/main.bef6bebe.css.map",
-    "main.59e02f24.js.map": "/budgetizer/static/js/main.59e02f24.js.map",
-    "453.b432b3b9.chunk.js.map": "/budgetizer/static/js/453.b432b3b9.chunk.js.map"
+    "main.css": "/static/css/main.bef6bebe.css",
+    "main.js": "/static/js/main.91a044e8.js",
+    "static/js/453.b432b3b9.chunk.js": "/static/js/453.b432b3b9.chunk.js",
+    "index.html": "/index.html",
+    "main.bef6bebe.css.map": "/static/css/main.bef6bebe.css.map",
+    "main.91a044e8.js.map": "/static/js/main.91a044e8.js.map",
+    "453.b432b3b9.chunk.js.map": "/static/js/453.b432b3b9.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.bef6bebe.css",
-    "static/js/main.59e02f24.js"
+    "static/js/main.91a044e8.js"
   ]
 }
